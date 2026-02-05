@@ -30,6 +30,18 @@ export default async function Home({
 
   return (
     <div className="flex flex-col gap-10">
+      <section className="relative -mx-4 -mt-6 h-[100svh] w-[calc(100%+2rem)] md:hidden">
+        <video
+          className="h-full w-full object-cover"
+          src="/mp4/gucci1.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-label="Produktvideo"
+        />
+      </section>
       <HeroBanner />
 
       <section className="flex flex-col gap-4 animate-fade">

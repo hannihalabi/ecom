@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const TopBar = () => {
   return (
-    <header className="sticky top-0 z-30 border-b border-white/60 bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-30 hidden border-b border-white/60 bg-white/80 backdrop-blur md:block">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 md:px-6">
         <Link href="/" className="flex items-center gap-2 font-semibold text-slate-900">
           <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-900 text-white">
