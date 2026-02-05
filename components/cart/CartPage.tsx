@@ -1,0 +1,74 @@
+"use client";
+
+import Link from "next/link";
+import { CartItemRow } from "@/components/cart/CartItemRow";
+import { CartSummary } from "@/components/cart/CartSummary";
+import { formatMoney } from "@/lib/format";
+import { useCart } from "@/store/cart";
+
+export const CartPage = () => {
+  const { detailedItems, updateQuantity, removeItem, subtotal, savings } = useCart();
+
+  if (detailedItems.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-10 text-center">
+        <h1 className="text-xl font-semibold text-slate-900">Din varukorg är tom</h1>
+        <p className="text-sm text-slate-600">
+          Ta del av de bästa erbjudandena innan de tar slut.
+        </p>
+        <Link
+          href="/"
+          className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
+        >
+          Se erbjudanden
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+      <div className="flex flex-col gap-4">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          Du sparade {formatMoney(savings)} i den här varukorgen.
+        </div>
+        {detailedItems.map(({ item, product, lineTotal }) => (
+          <CartItemRow
+            key={`${item.productId}-${item.selectedVariant ?? "default"}`}
+            item={item}
+            product={product}
+            lineTotal={lineTotal}
+            onUpdate={(quantity) =>
+              updateQuantity(item.productId, quantity, item.selectedVariant)
+            }
+            onRemove={() => removeItem(item.productId, item.selectedVariant)}
+          />
+        ))}
+      </div>
+      <div className="flex flex-col gap-4">
+        <CartSummary />
+        <div className="rounded-xl border border-slate-200 bg-white/90 p-4 text-xs text-slate-600">
+          <p className="font-semibold text-slate-700">Frakt och returer</p>
+          <p>Fri frakt över 3 000 kr. 30 dagars öppet köp.</p>
+        </div>
+      </div>
+
+      <div className="fixed bottom-16 left-0 right-0 z-40 mx-auto w-full max-w-6xl px-4 md:hidden">
+        <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg">
+          <div>
+            <p className="text-xs text-slate-500">Totalt</p>
+            <p className="text-base font-semibold text-slate-900">
+              {formatMoney(subtotal)}
+            </p>
+          </div>
+          <Link
+            href="/checkout"
+            className="rounded-full bg-slate-900 px-4 py-3 text-sm font-semibold text-white"
+          >
+            Till kassan
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
