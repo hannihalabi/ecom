@@ -20,7 +20,6 @@ export default async function SearchPage({
   const categories = getCategories();
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold text-slate-900">Sök erbjudanden</h1>
       <SearchClient
         products={products}
         categories={categories}

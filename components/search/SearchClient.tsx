@@ -4,16 +4,6 @@ import { useMemo, useState } from "react";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import type { Product } from "@/types";
 
-const POPULAR_SEARCHES = [
-  "gucci",
-  "louis vuitton",
-  "monogram",
-  "axelväska",
-  "duffelväska",
-];
-
-const STORAGE_KEY = "dealflow_recent_searches";
-
 type SearchClientProps = {
   products: Product[];
   categories: string[];
@@ -36,17 +26,6 @@ export const SearchClient = ({
   initialFilters,
 }: SearchClientProps) => {
   const [query, setQuery] = useState(initialQuery);
-  const [recent, setRecent] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    try {
-      return JSON.parse(raw) as string[];
-    } catch {
-      window.localStorage.removeItem(STORAGE_KEY);
-      return [];
-    }
-  });
   const [category, setCategory] = useState<string>(
     initialFilters?.category ?? "all",
   );
@@ -60,13 +39,6 @@ export const SearchClient = ({
     initialFilters?.freeShipping ?? false,
   );
   const [sort, setSort] = useState(initialFilters?.sort ?? "relevance");
-
-  const saveRecent = (term: string) => {
-    if (!term) return;
-    const next = [term, ...recent.filter((item) => item !== term)].slice(0, 5);
-    setRecent(next);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  };
 
   const suggestions = useMemo(() => {
     if (query.trim().length < 2) return [];
@@ -169,7 +141,6 @@ export const SearchClient = ({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            onBlur={() => saveRecent(query.trim())}
             placeholder="Sök erbjudanden, varumärken, kategorier..."
             className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
           />
@@ -181,7 +152,6 @@ export const SearchClient = ({
                   type="button"
                   onClick={() => {
                     setQuery(suggestion);
-                    saveRecent(suggestion);
                   }}
                   className="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
                 >
@@ -191,41 +161,6 @@ export const SearchClient = ({
             </div>
           )}
         </div>
-
-        {(recent.length > 0 || POPULAR_SEARCHES.length > 0) && (
-          <div className="mt-4 space-y-2">
-            {recent.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">
-                  Senaste:
-                </span>
-                {recent.map((term) => (
-                  <button
-                    key={term}
-                    type="button"
-                    onClick={() => setQuery(term)}
-                    className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600"
-                  >
-                    {term}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-slate-500">Populärt:</span>
-              {POPULAR_SEARCHES.map((term) => (
-                <button
-                  key={term}
-                  type="button"
-                  onClick={() => setQuery(term)}
-                  className="rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-700"
-                >
-                  {term}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-[1fr_3fr]">

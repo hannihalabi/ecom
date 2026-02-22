@@ -138,7 +138,7 @@ export const ProductPurchasePanel = ({ product }: ProductPurchasePanelProps) => 
         <p>Krypterade betalningar - 30 dagars öppet köp - Support 7 dagar i veckan</p>
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 z-40 mx-auto w-full max-w-6xl px-4 md:hidden">
+      <div className="fixed bottom-16 left-0 right-0 z-40 mx-auto w-full max-w-6xl md:hidden">
         <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg">
           <div>
             <p className="text-xs text-slate-500">Idag</p>

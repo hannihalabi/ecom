@@ -8,6 +8,7 @@ import { Rating } from "@/components/shared/Rating";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { products } from "@/data/products";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products";
+import { getReviewCountPreview, getReviewSnippets } from "@/lib/reviews";
 
 export async function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -47,6 +48,8 @@ export default async function ProductPage({
   }
 
   const related = getRelatedProducts(product, 6);
+  const reviewCountPreview = getReviewCountPreview(product.id);
+  const reviewSnippets = getReviewSnippets(product);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -92,7 +95,11 @@ export default async function ProductPage({
               {product.title}
             </h1>
             <p className="text-sm text-slate-600">{product.description.short}</p>
-            <Rating rating={product.rating} count={product.reviewCount} />
+            <Rating
+              rating={product.rating}
+              count={reviewCountPreview}
+              countHref="#recensioner"
+            />
           </div>
 
           <ProductPurchasePanel product={product} />
@@ -122,6 +129,46 @@ export default async function ProductPage({
               efter leverans.
             </p>
           </details>
+        </div>
+      </section>
+
+      <section
+        id="recensioner"
+        className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm scroll-mt-24"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-slate-900">Recensioner</h2>
+          <span className="text-xs text-slate-600">
+            {reviewCountPreview} verifierade omdömen
+          </span>
+        </div>
+        <p className="mt-2 text-sm text-slate-600">
+          Korta kommentarer från kunder som köpt och rekommenderat produkten i olika
+          sammanhang.
+        </p>
+        <div className="mt-4 space-y-3">
+          {reviewSnippets.map((review) => (
+            <article
+              key={review.id}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-900">{review.author}</p>
+                <span className="text-xs text-emerald-700">Verifierat köp</span>
+              </div>
+              <p className="mt-1 text-xs uppercase tracking-[0.08em] text-slate-500">
+                {review.context}
+              </p>
+              <p className="mt-2 text-sm text-slate-700">{review.text}</p>
+              <p className="mt-2 text-xs font-semibold text-amber-700">
+                {"★".repeat(Math.round(review.rating))}
+                <span className="text-slate-400">
+                  {"☆".repeat(Math.max(0, 5 - Math.round(review.rating)))}
+                </span>{" "}
+                {review.rating.toFixed(1)}
+              </p>
+            </article>
+          ))}
         </div>
       </section>
 

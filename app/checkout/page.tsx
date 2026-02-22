@@ -1,9 +1,9 @@
-import { CheckoutClient } from "@/components/checkout/CheckoutClient";
+import { CheckoutRedirectClient } from "@/components/checkout/CheckoutRedirectClient";
 
 export const metadata = {
   title: "Kassa",
 };
 
 export default function CheckoutPage() {
-  return <CheckoutClient />;
+  return <CheckoutRedirectClient />;
 }

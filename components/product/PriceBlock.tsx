@@ -15,15 +15,15 @@ export const PriceBlock = ({
   className,
 }: PriceBlockProps) => {
   return (
-    <div className={["flex flex-wrap items-center gap-2", className ?? ""].join(" ")}>
-      <span className="text-xl font-semibold text-slate-900">
+    <div className={["flex flex-wrap items-end gap-2", className ?? ""].join(" ")}>
+      <span className="[font-family:var(--font-display)] text-[2.15rem] leading-none text-[var(--lux-ink)] md:text-[2.35rem]">
         {formatMoney(priceDiscounted)}
       </span>
-      <span className="text-sm text-slate-400 line-through">
+      <span className="pb-1 text-sm text-[var(--lux-muted)] line-through decoration-[rgba(137,99,60,0.55)]">
         {formatMoney(priceOriginal)}
       </span>
       {discountPercent && (
-        <Badge label={`-${discountPercent}%`} variant="primary" />
+        <Badge label={`-${discountPercent}%`} variant="primary" className="mb-1" />
       )}
     </div>
   );

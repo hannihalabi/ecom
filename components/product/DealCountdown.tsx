@@ -35,11 +35,11 @@ export const DealCountdown = ({ endsAt }: DealCountdownProps) => {
   }, [endTime]);
 
   if (remaining <= 0) {
-    return <span className="text-xs text-rose-600">Erbjudandet är slut</span>;
+    return <span className="text-xs text-[var(--lux-accent-strong)]">Erbjudandet är slut</span>;
   }
 
   return (
-    <span className="rounded-full bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-600">
+    <span className="rounded-full border border-[rgba(166,123,78,0.42)] bg-[rgba(249,239,223,0.9)] px-3 py-1 text-xs font-semibold text-[var(--lux-accent-strong)]">
       Slutar om {formatTime(remaining)}
     </span>
   );

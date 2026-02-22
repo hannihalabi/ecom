@@ -1,10 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { useCart } from "@/store/cart";
 
-export const CartSummary = () => {
+type CartSummaryProps = {
+  onCheckout: () => void;
+  isCheckoutLoading: boolean;
+};
+
+export const CartSummary = ({
+  onCheckout,
+  isCheckoutLoading,
+}: CartSummaryProps) => {
   const { subtotal, originalTotal, savings } = useCart();
 
   return (
@@ -27,12 +34,14 @@ export const CartSummary = () => {
       <div className="rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
         Du sparade {formatMoney(savings)} på den här beställningen.
       </div>
-      <Link
-        href="/checkout"
-        className="rounded-full bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white"
+      <button
+        type="button"
+        onClick={onCheckout}
+        disabled={isCheckoutLoading}
+        className="rounded-full bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
       >
-        Till kassan
-      </Link>
+        {isCheckoutLoading ? "Skickar till Stripe..." : "Till kassan"}
+      </button>
     </div>
   );
 };
