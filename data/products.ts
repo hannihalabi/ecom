@@ -619,9 +619,9 @@ const baseProducts: Product[] = [
       "long": "Louis Vuitton-modell utvald för denna katalog. Bilderna visar exakt exemplar från flera vinklar så att du kan granska form, material och detaljer före köp."
     },
     "images": [
-      "/products/LV%20Speedy%20Bandoulle%CC%80re%2030%20Eclipse/LV%20Speedy%20Bandoulle%CC%80re%2030%20Eclipse%202699-1.jpeg",
-      "/products/LV%20Speedy%20Bandoulle%CC%80re%2030%20Eclipse/LV%20Speedy%20Bandoulle%CC%80re%2030%20Eclipse%202699-2.jpeg",
-      "/products/LV%20Speedy%20Bandoulle%CC%80re%2030%20Eclipse/LV%20Speedy%20Bandoulle%CC%80re%2030%20Eclipse%202699-3.jpeg"
+      "/products/LV%20Speedy%20Bandoullere%2030%20Eclipse/LV%20Speedy%20Bandoullere%2030%20Eclipse%202699-1.jpeg",
+      "/products/LV%20Speedy%20Bandoullere%2030%20Eclipse/LV%20Speedy%20Bandoullere%2030%20Eclipse%202699-2.jpeg",
+      "/products/LV%20Speedy%20Bandoullere%2030%20Eclipse/LV%20Speedy%20Bandoullere%2030%20Eclipse%202699-3.jpeg"
     ],
     "category": "Louis Vuitton",
     "tags": [

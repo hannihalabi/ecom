@@ -10,7 +10,7 @@ import { createStripeCheckoutSession } from "@/lib/stripeCheckout";
 import { useCart } from "@/store/cart";
 
 export const CartPage = () => {
-  const { detailedItems, updateQuantity, removeItem, subtotal, savings } = useCart();
+  const { detailedItems, updateQuantity, removeItem, savings } = useCart();
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -92,25 +92,6 @@ export const CartPage = () => {
         <div className="rounded-xl border border-slate-200 bg-white/90 p-4 text-xs text-slate-600">
           <p className="font-semibold text-slate-700">Frakt och returer</p>
           <p>Fri frakt över 3 000 kr. 30 dagars öppet köp.</p>
-        </div>
-      </div>
-
-      <div className="fixed bottom-16 left-0 right-0 z-40 mx-auto w-full max-w-6xl md:hidden">
-        <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg">
-          <div>
-            <p className="text-xs text-slate-500">Totalt</p>
-            <p className="text-base font-semibold text-slate-900">
-              {formatMoney(subtotal)}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleCheckout}
-            disabled={isCheckoutLoading}
-            className="rounded-full bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isCheckoutLoading ? "Skickar till Stripe..." : "Till kassan"}
-          </button>
         </div>
       </div>
     </div>
