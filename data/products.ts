@@ -553,10 +553,10 @@ const baseProducts: Product[] = [
       "long": "Louis Vuitton-modell utvald för denna katalog. Bilderna visar exakt exemplar från flera vinklar så att du kan granska form, material och detaljer före köp."
     },
     "images": [
-      "/products/LV%20Noe%CC%81%20Trunk%20BB/LV%20Noe%CC%81%20Trunk%20BB%202599-1.jpeg",
-      "/products/LV%20Noe%CC%81%20Trunk%20BB/LV%20Noe%CC%81%20Trunk%20BB%202599-2.jpeg",
-      "/products/LV%20Noe%CC%81%20Trunk%20BB/LV%20Noe%CC%81%20Trunk%20BB%202599-3.jpeg",
-      "/products/LV%20Noe%CC%81%20Trunk%20BB/LV%20Noe%CC%81%20Trunk%20BB%202599-4.jpeg"
+      "/products/LV%20Noe%20Trunk%20BB/LV%20Noe%20Trunk%20BB%202599-1.jpeg",
+      "/products/LV%20Noe%20Trunk%20BB/LV%20Noe%20Trunk%20BB%202599-2.jpeg",
+      "/products/LV%20Noe%20Trunk%20BB/LV%20Noe%20Trunk%20BB%202599-3.jpeg",
+      "/products/LV%20Noe%20Trunk%20BB/LV%20Noe%20Trunk%20BB%202599-4.jpeg"
     ],
     "category": "Louis Vuitton",
     "tags": [
