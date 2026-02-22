@@ -6,6 +6,7 @@ import { CartItemRow } from "@/components/cart/CartItemRow";
 import { CartSummary } from "@/components/cart/CartSummary";
 import { track } from "@/lib/analytics";
 import { formatMoney } from "@/lib/format";
+import { SHIPPING_COST_PER_PRODUCT } from "@/lib/shipping";
 import { createStripeCheckoutSession } from "@/lib/stripeCheckout";
 import { useCart } from "@/store/cart";
 
@@ -91,7 +92,10 @@ export const CartPage = () => {
         )}
         <div className="rounded-xl border border-slate-200 bg-white/90 p-4 text-xs text-slate-600">
           <p className="font-semibold text-slate-700">Frakt och returer</p>
-          <p>Fri frakt över 3 000 kr. 30 dagars öppet köp.</p>
+          <p>
+            {formatMoney(SHIPPING_COST_PER_PRODUCT)} frakt per produkt. 30 dagars
+            öppet köp.
+          </p>
         </div>
       </div>
     </div>

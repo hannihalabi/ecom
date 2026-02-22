@@ -12,7 +12,8 @@ export const CartSummary = ({
   onCheckout,
   isCheckoutLoading,
 }: CartSummaryProps) => {
-  const { subtotal, originalTotal, savings } = useCart();
+  const { subtotal, shippingTotal, total, totalItems, originalTotal, savings } =
+    useCart();
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
@@ -26,9 +27,17 @@ export const CartSummary = ({
           <span>Rabatter</span>
           <span className="text-emerald-600">-{formatMoney(savings)}</span>
         </div>
-        <div className="flex items-center justify-between font-semibold text-slate-900">
-          <span>Totalt idag</span>
+        <div className="flex items-center justify-between">
+          <span>Delsumma</span>
           <span>{formatMoney(subtotal)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span>Frakt ({totalItems} st)</span>
+          <span>{formatMoney(shippingTotal)}</span>
+        </div>
+        <div className="flex items-center justify-between font-semibold text-slate-900">
+          <span>Totalt att betala</span>
+          <span>{formatMoney(total)}</span>
         </div>
       </div>
       <div className="rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">

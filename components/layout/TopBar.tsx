@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { formatMoney } from "@/lib/format";
+import { SHIPPING_COST_PER_PRODUCT } from "@/lib/shipping";
 
 export const TopBar = () => {
   return (
@@ -19,7 +21,7 @@ export const TopBar = () => {
           Sök erbjudanden, varumärken, kategorier...
         </Link>
         <div className="hidden text-[11px] uppercase tracking-[0.12em] text-[var(--lux-muted)] md:block">
-          Fri frakt över 3 000 kr | 30 dagars öppet köp
+          {formatMoney(SHIPPING_COST_PER_PRODUCT)} frakt per produkt | 30 dagars öppet köp
         </div>
       </div>
     </header>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PriceBlock } from "@/components/product/PriceBlock";
 import { DealCountdown } from "@/components/product/DealCountdown";
 import { formatMoney } from "@/lib/format";
+import { formatDeliveryEta } from "@/lib/shipping";
 import { useCart } from "@/store/cart";
 import type { Product } from "@/types";
 
@@ -55,8 +56,7 @@ export const ProductPurchasePanel = ({ product }: ProductPurchasePanelProps) => 
           discountPercent={product.discountPercent}
         />
         <div className="text-xs text-slate-500">
-          {shippingLabel} - Leverans om {product.shipping.etaDaysMin}-
-          {product.shipping.etaDaysMax} dagar
+          {shippingLabel} - Leverans om {formatDeliveryEta(product.shipping)}
         </div>
         {product.shipping.freeOver && product.shipping.freeOver > 0 && (
           <div className="text-xs text-emerald-600">

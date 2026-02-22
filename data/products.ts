@@ -1,4 +1,5 @@
 import { Product } from "@/types";
+import { normalizeShipping } from "@/lib/shipping";
 
 const baseProducts: Product[] = [
   {
@@ -28,8 +29,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 0,
       "freeOver": 0,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": true,
     "flashDealEndsAt": "2027-12-31T23:59:59Z"
@@ -62,8 +63,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": true,
     "flashDealEndsAt": "2027-12-31T23:59:59Z"
@@ -97,8 +98,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": true,
     "flashDealEndsAt": "2027-12-31T23:59:59Z"
@@ -131,8 +132,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": true,
     "flashDealEndsAt": "2027-12-31T23:59:59Z"
@@ -166,8 +167,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": true,
     "flashDealEndsAt": "2027-12-31T23:59:59Z"
@@ -200,8 +201,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": true,
     "flashDealEndsAt": "2027-12-31T23:59:59Z"
@@ -235,8 +236,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 0,
       "freeOver": 0,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "badges": [
       "Exklusiv"
@@ -272,8 +273,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 0,
       "freeOver": 0,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "badges": [
       "Exklusiv"
@@ -308,8 +309,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 0,
       "freeOver": 0,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -341,8 +342,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -374,8 +375,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 0,
       "freeOver": 0,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -407,8 +408,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -440,8 +441,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -473,8 +474,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -505,8 +506,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -539,8 +540,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -572,8 +573,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -605,8 +606,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -637,8 +638,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -671,8 +672,8 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   },
@@ -704,16 +705,21 @@ const baseProducts: Product[] = [
     "shipping": {
       "price": 79,
       "freeOver": 3000,
-      "etaDaysMin": 2,
-      "etaDaysMax": 5
+      "etaDaysMin": 14,
+      "etaDaysMax": 14
     },
     "isFlashDeal": false
   }
 ];
 
 export const products: Product[] = baseProducts.map((product) => {
+  const shipping = normalizeShipping(product.shipping);
+
   if (product.discountPercent) {
-    return product;
+    return {
+      ...product,
+      shipping,
+    };
   }
 
   const discount = Math.round(
@@ -723,6 +729,7 @@ export const products: Product[] = baseProducts.map((product) => {
 
   return {
     ...product,
+    shipping,
     discountPercent: Math.max(discount, 5),
   };
 });

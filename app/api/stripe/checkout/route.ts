@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { products } from "@/data/products";
+import { SHIPPING_COST_PER_PRODUCT } from "@/lib/shipping";
 import type { CartItem } from "@/types";
 
 const STRIPE_CHECKOUT_URL = "https://api.stripe.com/v1/checkout/sessions";
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
   if (lineItems.length === 0) {
     return NextResponse.json({ error: "Inga giltiga produkter i varukorgen." }, { status: 400 });
   }
+  const totalItems = lineItems.reduce((sum, line) => sum + line.quantity, 0);
 
   const customer = body.customer ?? {};
   const customerName = [safeText(customer.firstName), safeText(customer.lastName)]
@@ -125,6 +127,21 @@ export async function POST(request: Request) {
       );
     }
   });
+
+  params.set(`line_items[${lineItems.length}][quantity]`, String(totalItems));
+  params.set(`line_items[${lineItems.length}][price_data][currency]`, "sek");
+  params.set(
+    `line_items[${lineItems.length}][price_data][unit_amount]`,
+    String(Math.round(SHIPPING_COST_PER_PRODUCT * 100)),
+  );
+  params.set(
+    `line_items[${lineItems.length}][price_data][product_data][name]`,
+    "Frakt per produkt",
+  );
+  params.set(
+    `line_items[${lineItems.length}][price_data][product_data][description]`,
+    `${SHIPPING_COST_PER_PRODUCT} kr x antal produkter`,
+  );
 
   try {
     const stripeResponse = await fetch(STRIPE_CHECKOUT_URL, {

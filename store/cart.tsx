@@ -10,6 +10,7 @@ import {
 } from "react";
 import { products } from "@/data/products";
 import { track } from "@/lib/analytics";
+import { getShippingTotal } from "@/lib/shipping";
 import type { CartItem, Product } from "@/types";
 
 const STORAGE_KEY = "dealflow_cart";
@@ -34,6 +35,8 @@ type CartContextValue = {
   clear: () => void;
   totalItems: number;
   subtotal: number;
+  shippingTotal: number;
+  total: number;
   originalTotal: number;
   savings: number;
 };
@@ -164,9 +167,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const totalItems = useMemo(
-    () => state.items.reduce((sum, item) => sum + item.quantity, 0),
-    [state.items],
+    () => detailedItems.reduce((sum, { item }) => sum + item.quantity, 0),
+    [detailedItems],
   );
+
+  const shippingTotal = useMemo(() => getShippingTotal(totalItems), [totalItems]);
+
+  const total = useMemo(() => subtotal + shippingTotal, [subtotal, shippingTotal]);
 
   const addItem = (productId: string, quantity = 1, selectedVariant?: string) => {
     dispatch({ type: "add", productId, quantity, selectedVariant });
@@ -196,6 +203,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     clear,
     totalItems,
     subtotal,
+    shippingTotal,
+    total,
     originalTotal,
     savings,
   };

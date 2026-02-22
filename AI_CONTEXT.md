@@ -25,7 +25,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `components/`: UI-komponenter per doman (`cart`, `checkout`, `product`, `search`, `layout`)
 - `data/products.ts`: Statisk produktkatalog
 - `store/cart.tsx`: Global varukorgsstate och localStorage-hydrering
-- `lib/`: Hjalfunktioner (`products`, `format`, `analytics`)
+- `lib/`: Hjalfunktioner (`products`, `format`, `analytics`, `shipping`)
 - `types/index.ts`: Centrala typer (`Product`, `CartItem`, `Shipping`)
 - `docs/architecture.md`: Levande arkitekturdokumentation
 - `AGENTS.md`: Repo-specifik sessionsrutin
@@ -54,9 +54,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `Product.images` maste vara giltiga filer under `public/products/...`.
 - Priser representeras som numeriska kronor (inte oren stranglogik).
 - `formatMoney` ska fortsatt anvanda `sv-SE` + `SEK` for konsekvent visning.
-- Fri frakt-logik anvands pa flera stallen:
-  - direkt fri frakt om `shipping.price === 0`
-  - eller kvalificerad om `shipping.freeOver <= priceDiscounted`
+- Frakt ar fast `129 kr` per produkt (`lib/shipping.ts`) och inkluderas i varukorg/checkout.
 - Varukorgsrad identifieras av (`productId` + `selectedVariant`).
 - Stripe-checkout kraver `STRIPE_SECRET_KEY` samt korrekt `NEXT_PUBLIC_APP_URL`.
 - Ingen backend-orderpersistens an: `orders`/`account` ar fortsatt mock.

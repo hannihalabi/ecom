@@ -17,6 +17,7 @@ There is no backend order service yet.
 - `app/`: route-level pages, metadata, loading states
 - `components/`: UI by domain (`product`, `cart`, `checkout`, `search`, `layout`, `shared`)
 - `data/products.ts`: static product source of truth
+- `lib/shipping.ts`: shared shipping policy (`129 SEK` per product) and totals helper
 - `lib/products.ts`: derived read-model functions (filters, categories, related, paging)
 - `store/cart.tsx`: cart state container + localStorage persistence
 - `types/index.ts`: domain types
@@ -64,7 +65,7 @@ There is no backend order service yet.
 - Image paths in catalog must resolve under `public/products/`.
 - Price fields are numeric and formatted via `lib/format.ts`.
 - Discount percentage is derived in `data/products.ts` when missing.
-- Free shipping is evaluated from `shipping.price` and `shipping.freeOver` thresholds.
+- Shipping is fixed at `129 SEK` per product and is added in cart totals and Stripe checkout.
 
 ## SEO and Metadata
 - Global metadata is declared in `app/layout.tsx`.

@@ -9,6 +9,7 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import { products } from "@/data/products";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products";
 import { getReviewCountPreview, getReviewSnippets } from "@/lib/reviews";
+import { formatDeliveryEta } from "@/lib/shipping";
 
 export async function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -124,9 +125,8 @@ export default async function ProductPage({
               Läs mer
             </summary>
             <p className="mt-2 text-sm text-slate-600">
-              Beräknad leverans: {product.shipping.etaDaysMin}-
-              {product.shipping.etaDaysMax} dagar. Returer accepteras inom 30 dagar
-              efter leverans.
+              Beräknad leverans: {formatDeliveryEta(product.shipping)}. Returer
+              accepteras inom 30 dagar efter leverans.
             </p>
           </details>
         </div>

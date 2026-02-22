@@ -12,16 +12,16 @@ type CheckoutSuccessClientProps = {
 export const CheckoutSuccessClient = ({
   sessionId,
 }: CheckoutSuccessClientProps) => {
-  const { clear, subtotal, totalItems } = useCart();
+  const { clear, total, totalItems } = useCart();
   const didRun = useRef(false);
-  const purchaseSnapshot = useRef({ subtotal, totalItems });
+  const purchaseSnapshot = useRef({ total, totalItems });
 
   useEffect(() => {
     if (didRun.current) return;
     didRun.current = true;
 
     track("purchase", {
-      total: purchaseSnapshot.current.subtotal,
+      total: purchaseSnapshot.current.total,
       itemCount: purchaseSnapshot.current.totalItems,
       sessionId,
     });
