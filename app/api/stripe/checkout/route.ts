@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { products } from "@/data/products";
+import { applyPromotionDiscountCents, validatePromotionCode } from "@/lib/promotions";
 import { SHIPPING_COST_PER_PRODUCT } from "@/lib/shipping";
 import type { CartItem } from "@/types";
 
@@ -19,6 +20,7 @@ type CheckoutCustomer = {
 type CheckoutRequestBody = {
   items?: CartItem[];
   customer?: CheckoutCustomer;
+  promotionCode?: string;
 };
 
 const safeText = (value: unknown) => (typeof value === "string" ? value.trim() : "");
@@ -77,12 +79,35 @@ export async function POST(request: Request) {
   const customerName = [safeText(customer.firstName), safeText(customer.lastName)]
     .filter(Boolean)
     .join(" ");
+  const rawPromotionCode = safeText(body.promotionCode);
+  const promotionValidation = rawPromotionCode
+    ? validatePromotionCode(rawPromotionCode)
+    : {
+        promotion: null,
+        normalized: "",
+        error: null as string | null,
+      };
+
+  if (rawPromotionCode && (promotionValidation.error || !promotionValidation.promotion)) {
+    return NextResponse.json(
+      {
+        error:
+          promotionValidation.error ??
+          "Rabattkoden kunde inte användas just nu.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const promotion = promotionValidation.promotion;
 
   const baseUrl = getBaseUrl(request);
   const params = new URLSearchParams();
   params.set("mode", "payment");
   params.set("locale", "sv");
-  params.set("allow_promotion_codes", "true");
+  if (!promotion) {
+    params.set("allow_promotion_codes", "true");
+  }
   params.set("billing_address_collection", "required");
   params.set("phone_number_collection[enabled]", "true");
   params.set("success_url", `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`);
@@ -99,13 +124,23 @@ export async function POST(request: Request) {
   if (safeText(customer.postalCode)) {
     params.set("metadata[postal_code]", safeText(customer.postalCode));
   }
+  if (promotion) {
+    params.set("metadata[promotion_code]", promotion.code);
+    params.set("metadata[promotion_percent_off]", String(promotion.percentOff));
+  }
 
   lineItems.forEach(({ product, quantity, selectedVariant }, index) => {
+    const baseUnitAmount = Math.round(product.priceDiscounted * 100);
+    const { discountedAmount: discountedUnitAmount } = applyPromotionDiscountCents(
+      baseUnitAmount,
+      promotion,
+    );
+
     params.set(`line_items[${index}][quantity]`, String(quantity));
     params.set(`line_items[${index}][price_data][currency]`, "sek");
     params.set(
       `line_items[${index}][price_data][unit_amount]`,
-      String(Math.round(product.priceDiscounted * 100)),
+      String(discountedUnitAmount),
     );
     params.set(
       `line_items[${index}][price_data][product_data][name]`,

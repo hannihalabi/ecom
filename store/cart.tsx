@@ -10,6 +10,12 @@ import {
 } from "react";
 import { products } from "@/data/products";
 import { track } from "@/lib/analytics";
+import {
+  applyPromotionDiscountToLines,
+  getPromotionByCode,
+  normalizePromotionCode,
+  validatePromotionCode,
+} from "@/lib/promotions";
 import { getShippingTotal } from "@/lib/shipping";
 import type { CartItem, Product } from "@/types";
 
@@ -17,6 +23,7 @@ const STORAGE_KEY = "dealflow_cart";
 
 type CartState = {
   items: CartItem[];
+  promotionCode: string;
 };
 
 type CartDetailedItem = {
@@ -26,6 +33,16 @@ type CartDetailedItem = {
   lineOriginal: number;
 };
 
+type PersistedCartState = {
+  items: CartItem[];
+  promotionCode?: string;
+};
+
+type ApplyPromotionResult = {
+  normalized: string;
+  error: string | null;
+};
+
 type CartContextValue = {
   items: CartItem[];
   detailedItems: CartDetailedItem[];
@@ -33,6 +50,11 @@ type CartContextValue = {
   removeItem: (productId: string, selectedVariant?: string) => void;
   updateQuantity: (productId: string, quantity: number, selectedVariant?: string) => void;
   clear: () => void;
+  applyPromotionCode: (code: string) => ApplyPromotionResult;
+  clearPromotionCode: () => void;
+  promotionCode: string | null;
+  promotionPercentOff: number;
+  promotionDiscount: number;
   totalItems: number;
   subtotal: number;
   shippingTotal: number;
@@ -42,10 +64,12 @@ type CartContextValue = {
 };
 
 type CartAction =
-  | { type: "hydrate"; items: CartItem[] }
+  | { type: "hydrate"; items: CartItem[]; promotionCode?: string }
   | { type: "add"; productId: string; quantity: number; selectedVariant?: string }
   | { type: "remove"; productId: string; selectedVariant?: string }
   | { type: "update"; productId: string; quantity: number; selectedVariant?: string }
+  | { type: "setPromotionCode"; code: string }
+  | { type: "clearPromotionCode" }
   | { type: "clear" };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -53,10 +77,73 @@ const CartContext = createContext<CartContextValue | null>(null);
 const isSameLine = (a: CartItem, b: CartItem) =>
   a.productId === b.productId && a.selectedVariant === b.selectedVariant;
 
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isCartItem = (value: unknown): value is CartItem => {
+  if (!isObjectRecord(value)) return false;
+  if (typeof value.productId !== "string") return false;
+  if (typeof value.quantity !== "number" || !Number.isFinite(value.quantity)) {
+    return false;
+  }
+  if (value.selectedVariant !== undefined && typeof value.selectedVariant !== "string") {
+    return false;
+  }
+  return true;
+};
+
+const sanitizeItems = (items: CartItem[]) =>
+  items
+    .map((item) => ({
+      productId: item.productId.trim(),
+      quantity: Math.floor(item.quantity),
+      selectedVariant: item.selectedVariant?.trim() || undefined,
+    }))
+    .filter((item) => item.productId.length > 0 && item.quantity > 0);
+
+const parsePersistedCartState = (raw: string): CartState | null => {
+  const parsed = JSON.parse(raw) as unknown;
+
+  if (Array.isArray(parsed) && parsed.every(isCartItem)) {
+    return {
+      items: sanitizeItems(parsed),
+      promotionCode: "",
+    };
+  }
+
+  if (!isObjectRecord(parsed) || !Array.isArray(parsed.items)) {
+    return null;
+  }
+
+  const items = parsed.items;
+  if (!items.every(isCartItem)) {
+    return null;
+  }
+
+  if (
+    parsed.promotionCode !== undefined &&
+    typeof parsed.promotionCode !== "string"
+  ) {
+    return null;
+  }
+
+  const normalizedPromotionCode = normalizePromotionCode(parsed.promotionCode);
+  const activePromotionCode =
+    getPromotionByCode(normalizedPromotionCode).promotion?.code ?? "";
+
+  return {
+    items: sanitizeItems(items),
+    promotionCode: activePromotionCode,
+  };
+};
+
 const reducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "hydrate":
-      return { items: action.items };
+      return {
+        items: action.items,
+        promotionCode: normalizePromotionCode(action.promotionCode),
+      };
     case "add": {
       const existing = state.items.find((item) =>
         isSameLine(item, {
@@ -68,6 +155,7 @@ const reducer = (state: CartState, action: CartAction): CartState => {
 
       if (existing) {
         return {
+          ...state,
           items: state.items.map((item) =>
             isSameLine(item, existing)
               ? { ...item, quantity: item.quantity + action.quantity }
@@ -77,6 +165,7 @@ const reducer = (state: CartState, action: CartAction): CartState => {
       }
 
       return {
+        ...state,
         items: [
           ...state.items,
           {
@@ -89,6 +178,7 @@ const reducer = (state: CartState, action: CartAction): CartState => {
     }
     case "remove":
       return {
+        ...state,
         items: state.items.filter(
           (item) =>
             !(
@@ -99,6 +189,7 @@ const reducer = (state: CartState, action: CartAction): CartState => {
       };
     case "update":
       return {
+        ...state,
         items: state.items
           .map((item) =>
             item.productId === action.productId &&
@@ -108,22 +199,34 @@ const reducer = (state: CartState, action: CartAction): CartState => {
           )
           .filter((item) => item.quantity > 0),
       };
+    case "setPromotionCode":
+      return { ...state, promotionCode: normalizePromotionCode(action.code) };
+    case "clearPromotionCode":
+      return { ...state, promotionCode: "" };
     case "clear":
-      return { items: [] };
+      return { items: [], promotionCode: "" };
     default:
       return state;
   }
 };
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(reducer, { items: [] });
+  const [state, dispatch] = useReducer(reducer, { items: [], promotionCode: "" });
 
   useEffect(() => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       try {
-        const parsed = JSON.parse(raw) as CartItem[];
-        dispatch({ type: "hydrate", items: parsed });
+        const parsed = parsePersistedCartState(raw);
+        if (!parsed) {
+          window.localStorage.removeItem(STORAGE_KEY);
+          return;
+        }
+        dispatch({
+          type: "hydrate",
+          items: parsed.items,
+          promotionCode: parsed.promotionCode,
+        });
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
@@ -131,8 +234,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
-  }, [state.items]);
+    const persistedState: PersistedCartState = { items: state.items };
+    if (state.promotionCode) {
+      persistedState.promotionCode = state.promotionCode;
+    }
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedState));
+  }, [state.items, state.promotionCode]);
 
   const productMap = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
@@ -151,9 +258,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       .filter((entry): entry is CartDetailedItem => Boolean(entry));
   }, [productMap, state.items]);
 
-  const subtotal = useMemo(
-    () => detailedItems.reduce((sum, item) => sum + item.lineTotal, 0),
+  const promotion = useMemo(
+    () => getPromotionByCode(state.promotionCode).promotion,
+    [state.promotionCode],
+  );
+
+  const lineTotals = useMemo(
+    () => detailedItems.map((item) => item.lineTotal),
     [detailedItems],
+  );
+
+  const subtotalBeforePromotion = useMemo(
+    () => lineTotals.reduce((sum, lineTotal) => sum + lineTotal, 0),
+    [lineTotals],
+  );
+
+  const promotionTotals = useMemo(
+    () => applyPromotionDiscountToLines(lineTotals, promotion),
+    [lineTotals, promotion],
+  );
+
+  const subtotal = useMemo(
+    () => promotionTotals.discountedTotal,
+    [promotionTotals.discountedTotal],
   );
 
   const originalTotal = useMemo(
@@ -162,8 +289,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const savings = useMemo(
-    () => Math.max(originalTotal - subtotal, 0),
-    [originalTotal, subtotal],
+    () =>
+      Math.max(originalTotal - subtotalBeforePromotion, 0) + promotionTotals.discount,
+    [originalTotal, promotionTotals.discount, subtotalBeforePromotion],
   );
 
   const totalItems = useMemo(
@@ -194,6 +322,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const clear = () => dispatch({ type: "clear" });
 
+  const applyPromotionCode = (code: string): ApplyPromotionResult => {
+    const { promotion: validPromotion, normalized, error } = validatePromotionCode(code);
+    if (!validPromotion || error) {
+      return {
+        normalized,
+        error: error ?? "Rabattkoden kunde inte användas.",
+      };
+    }
+
+    dispatch({ type: "setPromotionCode", code: normalized });
+    return { normalized, error: null };
+  };
+
+  const clearPromotionCode = () => dispatch({ type: "clearPromotionCode" });
+
   const value: CartContextValue = {
     items: state.items,
     detailedItems,
@@ -201,6 +344,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     removeItem,
     updateQuantity,
     clear,
+    applyPromotionCode,
+    clearPromotionCode,
+    promotionCode: promotion?.code ?? null,
+    promotionPercentOff: promotion?.percentOff ?? 0,
+    promotionDiscount: promotionTotals.discount,
     totalItems,
     subtotal,
     shippingTotal,

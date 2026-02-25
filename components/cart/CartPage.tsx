@@ -11,7 +11,8 @@ import { createStripeCheckoutSession } from "@/lib/stripeCheckout";
 import { useCart } from "@/store/cart";
 
 export const CartPage = () => {
-  const { detailedItems, updateQuantity, removeItem, savings } = useCart();
+  const { detailedItems, updateQuantity, removeItem, savings, promotionCode } =
+    useCart();
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -32,6 +33,7 @@ export const CartPage = () => {
           quantity: item.quantity,
           selectedVariant: item.selectedVariant,
         })),
+        promotionCode: promotionCode ?? undefined,
       });
       window.location.assign(url);
     } catch (error) {

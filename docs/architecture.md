@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-02-22
+Last updated: 2026-02-25
 
 ## System Overview
 SparkDeal is a Next.js App Router storefront prototype with static catalog data and client-side cart state.
@@ -19,6 +19,7 @@ There is no backend order service yet.
 - `data/products.ts`: static product source of truth
 - `lib/shipping.ts`: shared shipping policy (`129 SEK` per product) and totals helper
 - `lib/products.ts`: derived read-model functions (filters, categories, related, paging)
+- `lib/promotions.ts`: discount-code validation and discount helpers
 - `store/cart.tsx`: cart state container + localStorage persistence
 - `types/index.ts`: domain types
 
@@ -45,13 +46,13 @@ There is no backend order service yet.
 1. `data/products.ts` exports `products`.
 2. `lib/products.ts` derives category lists and sorted/filter slices.
 3. Route pages pass selected product sets into presentation components.
-4. `store/cart.tsx` manages cart actions and computed totals.
+4. `store/cart.tsx` manages cart actions, promotion-code state, and computed totals.
 5. `components/cart/CartPage.tsx` starts checkout directly from the "Till kassan" CTA.
 6. `components/checkout/CheckoutRedirectClient.tsx` provides fallback redirect behavior for `/checkout`.
-7. Stripe Checkout Session is created server-side and client is redirected to Stripe-hosted payment.
+7. Stripe Checkout Session is created server-side, optional promotion code is validated/applied, and client is redirected to Stripe-hosted payment.
 
 ## State and Persistence
-- Cart is persisted in browser localStorage under `dealflow_cart`.
+- Cart line items and active promotion code are persisted in browser localStorage under `dealflow_cart`.
 - No server persistence for cart/orders/account.
 
 ## External Integrations
@@ -66,6 +67,7 @@ There is no backend order service yet.
 - Price fields are numeric and formatted via `lib/format.ts`.
 - Discount percentage is derived in `data/products.ts` when missing.
 - Shipping is fixed at `129 SEK` per product and is added in cart totals and Stripe checkout.
+- Promotion code behavior is governed by `lib/promotions.ts` and must stay consistent between cart totals and Stripe checkout line items.
 
 ## SEO and Metadata
 - Global metadata is declared in `app/layout.tsx`.
@@ -78,6 +80,7 @@ There is no backend order service yet.
 - Orders/account are static mocks and may be mistaken for real backend-backed flows.
 - Analytics currently logs to console only.
 - Stripe checkout depends on environment configuration and available outbound network.
+- Promotion windows in `lib/promotions.ts` are time-bound and can expire.
 - Catalog file names contain accent/Unicode combinations that can be fragile across tooling.
 
 ## Verification Baseline

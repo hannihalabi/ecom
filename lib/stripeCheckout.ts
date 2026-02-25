@@ -12,6 +12,7 @@ type CheckoutCustomer = {
 type CheckoutPayload = {
   items: CartItem[];
   customer?: CheckoutCustomer;
+  promotionCode?: string;
 };
 
 type CheckoutResponse = {

@@ -1,6 +1,6 @@
 # AI_CONTEXT
 
-Senast uppdaterad: 2026-02-22
+Senast uppdaterad: 2026-02-25
 
 ## Syfte
 Denna fil lagrar stabil projektkontext sa att nya Codex-sessioner snabbt kan leverera jamn kvalitet.
@@ -25,7 +25,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `components/`: UI-komponenter per doman (`cart`, `checkout`, `product`, `search`, `layout`)
 - `data/products.ts`: Statisk produktkatalog
 - `store/cart.tsx`: Global varukorgsstate och localStorage-hydrering
-- `lib/`: Hjalfunktioner (`products`, `format`, `analytics`, `shipping`)
+- `lib/`: Hjalfunktioner (`products`, `format`, `analytics`, `shipping`, `promotions`)
 - `types/index.ts`: Centrala typer (`Product`, `CartItem`, `Shipping`)
 - `docs/architecture.md`: Levande arkitekturdokumentation
 - `AGENTS.md`: Repo-specifik sessionsrutin
@@ -34,8 +34,8 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 1. Produktdata laddas statiskt fran `data/products.ts`.
 2. Produktlistor/urval byggs via `lib/products.ts` (kategorier, flash deals, trending, paginering, relaterat, etc).
 3. UI renderar i App Router-sidor under `app/`.
-4. Varukorgen hanteras klientside i `store/cart.tsx` och persisteras i localStorage med nyckeln `dealflow_cart`.
-5. Checkout initieras direkt fran varukorgens CTA i `components/cart/CartPage.tsx` och via fallback i `components/checkout/CheckoutRedirectClient.tsx`, som skickar varukorgens rader till `app/api/stripe/checkout/route.ts`.
+4. Varukorgen hanteras klientside i `store/cart.tsx` och persisteras i localStorage med nyckeln `dealflow_cart` (rader + aktiv rabattkod).
+5. Checkout initieras direkt fran varukorgens CTA i `components/cart/CartPage.tsx` och via fallback i `components/checkout/CheckoutRedirectClient.tsx`, som skickar varukorgens rader (+ ev. rabattkod) till `app/api/stripe/checkout/route.ts`.
 6. Analytik ar idag en placeholder (`console.info`) i `lib/analytics.ts`.
 
 ## Routekarta (huvud)
@@ -56,6 +56,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `formatMoney` ska fortsatt anvanda `sv-SE` + `SEK` for konsekvent visning.
 - Frakt ar fast `129 kr` per produkt (`lib/shipping.ts`) och inkluderas i varukorg/checkout.
 - Varukorgsrad identifieras av (`productId` + `selectedVariant`).
+- Rabattkoder valideras via `lib/promotions.ts` och appliceras i varukorgens totalsummering samt i Stripe-sessionens produkt-rader.
 - Stripe-checkout kraver `STRIPE_SECRET_KEY` samt korrekt `NEXT_PUBLIC_APP_URL`.
 - Ingen backend-orderpersistens an: `orders`/`account` ar fortsatt mock.
 
@@ -70,6 +71,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `orders` och `account` ar statiska mock-sidor.
 - `getForYou()` ar slumpbaserad och inte deterministisk mellan renderingar.
 - Checkout beror pa giltig Stripe-konfiguration i miljo/hosting.
+- Kampanjer i `lib/promotions.ts` ar tidsstyrda och maste hallas uppdaterade for att fortsatt ge rabatt.
 - Dokumentation kan drifta om `README.md`, `AI_CONTEXT.md` och `docs/architecture.md` inte uppdateras tillsammans.
 
 ## Lokal utveckling och verifiering

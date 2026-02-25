@@ -7,7 +7,7 @@ import { createStripeCheckoutSession } from "@/lib/stripeCheckout";
 import { useCart } from "@/store/cart";
 
 export const CheckoutRedirectClient = () => {
-  const { detailedItems } = useCart();
+  const { detailedItems, promotionCode } = useCart();
   const [error, setError] = useState<string | null>(null);
   const didAttempt = useRef(false);
 
@@ -29,6 +29,7 @@ export const CheckoutRedirectClient = () => {
             quantity: item.quantity,
             selectedVariant: item.selectedVariant,
           })),
+          promotionCode: promotionCode ?? undefined,
         });
         window.location.assign(url);
       } catch (checkoutError) {
@@ -41,7 +42,7 @@ export const CheckoutRedirectClient = () => {
     };
 
     void start();
-  }, [detailedItems]);
+  }, [detailedItems, promotionCode]);
 
   if (detailedItems.length === 0) {
     return (
