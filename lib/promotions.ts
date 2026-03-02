@@ -7,7 +7,7 @@ export type Promotion = {
 const MAND20_PROMO: Promotion = {
   code: "MAND20",
   percentOff: 20,
-  endsAt: new Date(2026, 1, 28, 23, 59, 59, 999),
+  endsAt: new Date(2026, 2, 31, 23, 59, 59, 999),
 };
 
 const PROMOTIONS = [MAND20_PROMO];
