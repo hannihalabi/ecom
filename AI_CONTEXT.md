@@ -1,6 +1,6 @@
 # AI_CONTEXT
 
-Senast uppdaterad: 2026-02-25
+Senast uppdaterad: 2026-03-07
 
 ## Syfte
 Denna fil lagrar stabil projektkontext sa att nya Codex-sessioner snabbt kan leverera jamn kvalitet.
@@ -10,6 +10,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - Produktnamn: SparkDeal
 - Typ: Mobilanpassad e-handelsapp (demo/prototyp)
 - Primart flode: Hem -> Produktsida -> Varukorg -> Kassa -> Bestallningar/Konto
+- Startsidan har ett interaktivt onskemalsflode som simulerar matchning av dromvaska och visar rekommenderade produkter
 - Sprak och lokal: Svenska copy-texter, valuta i SEK (`sv-SE`)
 
 ## Tech Stack
@@ -26,6 +27,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `data/products.ts`: Statisk produktkatalog
 - `store/cart.tsx`: Global varukorgsstate och localStorage-hydrering
 - `lib/`: Hjalfunktioner (`products`, `format`, `analytics`, `shipping`, `promotions`)
+- `lib/bagMatch.ts`: logik for onskemalsanalys (steg + resultatcopy)
 - `types/index.ts`: Centrala typer (`Product`, `CartItem`, `Shipping`)
 - `docs/architecture.md`: Levande arkitekturdokumentation
 - `AGENTS.md`: Repo-specifik sessionsrutin
@@ -33,13 +35,14 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 ## Arkitektur och dataflode
 1. Produktdata laddas statiskt fran `data/products.ts`.
 2. Produktlistor/urval byggs via `lib/products.ts` (kategorier, flash deals, trending, paginering, relaterat, etc).
-3. UI renderar i App Router-sidor under `app/`.
-4. Varukorgen hanteras klientside i `store/cart.tsx` och persisteras i localStorage med nyckeln `dealflow_cart` (rader + aktiv rabattkod).
-5. Checkout initieras direkt fran varukorgens CTA i `components/cart/CartPage.tsx` och via fallback i `components/checkout/CheckoutRedirectClient.tsx`, som skickar varukorgens rader (+ ev. rabattkod) till `app/api/stripe/checkout/route.ts`.
-6. Analytik ar idag en placeholder (`console.info`) i `lib/analytics.ts`.
+3. Startsidans onskemalsanalys far steg/resultatcopy via `lib/bagMatch.ts` och visar rekommenderade produkter.
+4. UI renderar i App Router-sidor under `app/`.
+5. Varukorgen hanteras klientside i `store/cart.tsx` och persisteras i localStorage med nyckeln `dealflow_cart` (rader + aktiv rabattkod).
+6. Checkout initieras direkt fran varukorgens CTA i `components/cart/CartPage.tsx` och via fallback i `components/checkout/CheckoutRedirectClient.tsx`, som skickar varukorgens rader (+ ev. rabattkod) till `app/api/stripe/checkout/route.ts`.
+7. Analytik ar idag en placeholder (`console.info`) i `lib/analytics.ts`.
 
 ## Routekarta (huvud)
-- `/` hem: hero, kategorier, urvalssektioner, paginerad alla-produkter
+- `/` hem: hero/video, onskemalsanalys, urvalssektioner, paginerad alla-produkter
 - `/p/[slug]`: produktsida med metadata, JSON-LD, galleri, kop-panel, relaterade produkter
 - `/search`: sok + filter + sortering
 - `/cart`: varukorg
@@ -70,6 +73,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 ## Kanda begransningar / risker
 - `orders` och `account` ar statiska mock-sidor.
 - `getForYou()` ar slumpbaserad och inte deterministisk mellan renderingar.
+- Onskemalsanalysen pa startsidan ar en frontend-simulering och ar inte kopplad till lagerbackend.
 - Checkout beror pa giltig Stripe-konfiguration i miljo/hosting.
 - Kampanjer i `lib/promotions.ts` ar tidsstyrda och maste hallas uppdaterade for att fortsatt ge rabatt.
 - Dokumentation kan drifta om `README.md`, `AI_CONTEXT.md` och `docs/architecture.md` inte uppdateras tillsammans.

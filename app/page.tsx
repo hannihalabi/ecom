@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BagRequestMatcher } from "@/components/home/BagRequestMatcher";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import {
   getForYou,
@@ -20,6 +21,7 @@ export default async function Home({
   const trending = getTrending();
   const underThreeThousand = getUnderPrice(3000);
   const forYou = getForYou();
+  const bagRequestSuggestions = trending.slice(0, 4);
 
   return (
     <div className="flex flex-col gap-12 pb-2">
@@ -35,6 +37,10 @@ export default async function Home({
           aria-label="Produktvideo"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(23,14,8,0.12),rgba(23,14,8,0.45))]" />
+      </section>
+
+      <section className="flex flex-col gap-4 animate-fade">
+        <BagRequestMatcher suggestedProducts={bagRequestSuggestions} />
       </section>
 
       <section className="flex flex-col gap-4 animate-fade">
