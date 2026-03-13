@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { track } from "@/lib/analytics";
+import { isSpecialOrderProductId } from "@/lib/specialOrder";
 import { useCart } from "@/store/cart";
 
 export const CheckoutClient = () => {
@@ -47,7 +48,7 @@ export const CheckoutClient = () => {
           href="/"
           className="mt-4 inline-flex rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
         >
-          Handla erbjudanden
+          Till startsidan
         </Link>
       </div>
     );
@@ -151,8 +152,13 @@ export const CheckoutClient = () => {
                 <span>{product.title}</span>
                 <span>{formatMoney(lineTotal)}</span>
               </div>
-              {item.selectedVariant && (
+              {item.selectedVariant && !isSpecialOrderProductId(item.productId) && (
                 <span className="text-xs text-slate-400">{item.selectedVariant}</span>
+              )}
+              {item.specialRequest && (
+                <p className="mt-1 text-xs text-slate-500">
+                  Special order: {item.specialRequest}
+                </p>
               )}
             </div>
           ))}

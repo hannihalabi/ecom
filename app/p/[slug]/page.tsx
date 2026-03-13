@@ -5,9 +5,8 @@ import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel"
 import { TrackView } from "@/components/product/TrackView";
 import { Badge } from "@/components/shared/Badge";
 import { Rating } from "@/components/shared/Rating";
-import { ProductGrid } from "@/components/product/ProductGrid";
 import { products } from "@/data/products";
-import { getProductBySlug, getRelatedProducts } from "@/lib/products";
+import { getProductBySlug } from "@/lib/products";
 import { getReviewCountPreview, getReviewSnippets } from "@/lib/reviews";
 import { formatDeliveryEta } from "@/lib/shipping";
 
@@ -48,7 +47,6 @@ export default async function ProductPage({
     notFound();
   }
 
-  const related = getRelatedProducts(product, 6);
   const reviewCountPreview = getReviewCountPreview(product.id);
   const reviewSnippets = getReviewSnippets(product);
 
@@ -170,11 +168,6 @@ export default async function ProductPage({
             </article>
           ))}
         </div>
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-slate-900">Du kanske också gillar</h2>
-        <ProductGrid products={related} />
       </section>
     </div>
   );

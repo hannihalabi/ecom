@@ -1,6 +1,20 @@
 import { Product } from "@/types";
 import { normalizeShipping } from "@/lib/shipping";
 
+const PRICE_TIERS = [2999, 3499, 3999] as const;
+
+const getNormalizedDiscountedPrice = (price: number) => {
+  if (price <= 3249) return PRICE_TIERS[0];
+  if (price <= 3749) return PRICE_TIERS[1];
+  return PRICE_TIERS[2];
+};
+
+const getNormalizedOriginalPrice = (priceDiscounted: number) => {
+  if (priceDiscounted === 2999) return 3699;
+  if (priceDiscounted === 3499) return 4299;
+  return 4699;
+};
+
 const baseProducts: Product[] = [
   {
     "id": "p-2001",
@@ -714,21 +728,29 @@ const baseProducts: Product[] = [
 
 export const products: Product[] = baseProducts.map((product) => {
   const shipping = normalizeShipping(product.shipping);
+  const priceDiscounted = getNormalizedDiscountedPrice(product.priceDiscounted);
+  const priceOriginal = getNormalizedOriginalPrice(priceDiscounted);
 
   if (product.discountPercent) {
     return {
       ...product,
+      priceOriginal,
+      priceDiscounted,
       shipping,
+      discountPercent: Math.round(
+        ((priceOriginal - priceDiscounted) / priceOriginal) * 100,
+      ),
     };
   }
 
   const discount = Math.round(
-    ((product.priceOriginal - product.priceDiscounted) / product.priceOriginal) *
-      100,
+    ((priceOriginal - priceDiscounted) / priceOriginal) * 100,
   );
 
   return {
     ...product,
+    priceOriginal,
+    priceDiscounted,
     shipping,
     discountPercent: Math.max(discount, 5),
   };

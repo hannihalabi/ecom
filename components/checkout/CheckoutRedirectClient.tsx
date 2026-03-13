@@ -24,11 +24,7 @@ export const CheckoutRedirectClient = () => {
 
       try {
         const url = await createStripeCheckoutSession({
-          items: detailedItems.map(({ item }) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            selectedVariant: item.selectedVariant,
-          })),
+          items: detailedItems.map(({ item }) => item),
           promotionCode: promotionCode ?? undefined,
         });
         window.location.assign(url);

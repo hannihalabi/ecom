@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none">
+  <rect width="800" height="800" rx="48" fill="#1F160F"/>
+  <rect x="48" y="48" width="704" height="704" rx="36" fill="url(#surface)"/>
+  <path d="M246 288C246 224.935 297.935 173 361 173H439C502.065 173 554 224.935 554 288V341H603C629.51 341 651 362.49 651 389V568C651 642.006 591.006 702 517 702H283C208.994 702 149 642.006 149 568V389C149 362.49 170.49 341 197 341H246V288Z" fill="url(#bag)"/>
+  <path d="M306 288C306 258.177 330.177 234 360 234H440C469.823 234 494 258.177 494 288V341H306V288Z" stroke="#F4DFBF" stroke-width="24"/>
+  <path d="M149 433H651" stroke="#D2A772" stroke-opacity=".45" stroke-width="10"/>
+  <circle cx="400" cy="517" r="90" fill="#F5E9D4" fill-opacity=".08" stroke="#F4DFBF" stroke-width="8"/>
+  <path d="M356 517L386 547L446 487" stroke="#F4DFBF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="400" y="124" text-anchor="middle" fill="#F4DFBF" font-family="Georgia, serif" font-size="44" letter-spacing="10">SPECIAL ORDER</text>
+  <defs>
+    <linearGradient id="surface" x1="96" y1="80" x2="693" y2="731" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2F2116"/>
+      <stop offset="1" stop-color="#150E09"/>
+    </linearGradient>
+    <linearGradient id="bag" x1="220" y1="190" x2="578" y2="684" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#CDA56F"/>
+      <stop offset=".55" stop-color="#B88652"/>
+      <stop offset="1" stop-color="#8A613A"/>
+    </linearGradient>
+  </defs>
+</svg>

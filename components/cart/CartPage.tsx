@@ -11,8 +11,14 @@ import { createStripeCheckoutSession } from "@/lib/stripeCheckout";
 import { useCart } from "@/store/cart";
 
 export const CartPage = () => {
-  const { detailedItems, updateQuantity, removeItem, savings, promotionCode } =
-    useCart();
+  const {
+    detailedItems,
+    updateQuantity,
+    updateSpecialOrderRequest,
+    removeItem,
+    savings,
+    promotionCode,
+  } = useCart();
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -28,11 +34,7 @@ export const CartPage = () => {
 
     try {
       const url = await createStripeCheckoutSession({
-        items: detailedItems.map(({ item }) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          selectedVariant: item.selectedVariant,
-        })),
+        items: detailedItems.map(({ item }) => item),
         promotionCode: promotionCode ?? undefined,
       });
       window.location.assign(url);
@@ -51,13 +53,13 @@ export const CartPage = () => {
       <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-10 text-center">
         <h1 className="text-xl font-semibold text-slate-900">Din varukorg är tom</h1>
         <p className="text-sm text-slate-600">
-          Ta del av de bästa erbjudandena innan de tar slut.
+          Sök efter en modell eller skapa en special order för att komma vidare.
         </p>
         <Link
           href="/"
           className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
         >
-          Se erbjudanden
+          Till startsidan
         </Link>
       </div>
     );
@@ -78,6 +80,7 @@ export const CartPage = () => {
             onUpdate={(quantity) =>
               updateQuantity(item.productId, quantity, item.selectedVariant)
             }
+            onUpdateRequest={(request) => updateSpecialOrderRequest(request)}
             onRemove={() => removeItem(item.productId, item.selectedVariant)}
           />
         ))}

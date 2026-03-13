@@ -17,6 +17,11 @@ import {
   validatePromotionCode,
 } from "@/lib/promotions";
 import { getShippingTotal } from "@/lib/shipping";
+import {
+  isSpecialOrderProductId,
+  SPECIAL_ORDER_PRODUCT,
+  SPECIAL_ORDER_VARIANT,
+} from "@/lib/specialOrder";
 import type { CartItem, Product } from "@/types";
 
 const STORAGE_KEY = "dealflow_cart";
@@ -47,8 +52,10 @@ type CartContextValue = {
   items: CartItem[];
   detailedItems: CartDetailedItem[];
   addItem: (productId: string, quantity?: number, selectedVariant?: string) => void;
+  addSpecialOrder: (request: string) => void;
   removeItem: (productId: string, selectedVariant?: string) => void;
   updateQuantity: (productId: string, quantity: number, selectedVariant?: string) => void;
+  updateSpecialOrderRequest: (request: string) => void;
   clear: () => void;
   applyPromotionCode: (code: string) => ApplyPromotionResult;
   clearPromotionCode: () => void;
@@ -66,8 +73,10 @@ type CartContextValue = {
 type CartAction =
   | { type: "hydrate"; items: CartItem[]; promotionCode?: string }
   | { type: "add"; productId: string; quantity: number; selectedVariant?: string }
+  | { type: "addSpecialOrder"; request: string }
   | { type: "remove"; productId: string; selectedVariant?: string }
   | { type: "update"; productId: string; quantity: number; selectedVariant?: string }
+  | { type: "updateSpecialOrderRequest"; request: string }
   | { type: "setPromotionCode"; code: string }
   | { type: "clearPromotionCode" }
   | { type: "clear" };
@@ -76,6 +85,8 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 const isSameLine = (a: CartItem, b: CartItem) =>
   a.productId === b.productId && a.selectedVariant === b.selectedVariant;
+
+const sanitizeSpecialRequest = (value?: string) => value?.trim() || undefined;
 
 const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
@@ -89,6 +100,9 @@ const isCartItem = (value: unknown): value is CartItem => {
   if (value.selectedVariant !== undefined && typeof value.selectedVariant !== "string") {
     return false;
   }
+  if (value.specialRequest !== undefined && typeof value.specialRequest !== "string") {
+    return false;
+  }
   return true;
 };
 
@@ -97,7 +111,10 @@ const sanitizeItems = (items: CartItem[]) =>
     .map((item) => ({
       productId: item.productId.trim(),
       quantity: Math.floor(item.quantity),
-      selectedVariant: item.selectedVariant?.trim() || undefined,
+      selectedVariant: isSpecialOrderProductId(item.productId)
+        ? SPECIAL_ORDER_VARIANT
+        : item.selectedVariant?.trim() || undefined,
+      specialRequest: sanitizeSpecialRequest(item.specialRequest),
     }))
     .filter((item) => item.productId.length > 0 && item.quantity > 0);
 
@@ -176,6 +193,45 @@ const reducer = (state: CartState, action: CartAction): CartState => {
         ],
       };
     }
+    case "addSpecialOrder": {
+      const specialRequest = sanitizeSpecialRequest(action.request);
+      if (!specialRequest) {
+        return state;
+      }
+
+      const existing = state.items.find((item) =>
+        isSpecialOrderProductId(item.productId),
+      );
+
+      if (existing) {
+        return {
+          ...state,
+          items: state.items.map((item) =>
+            isSpecialOrderProductId(item.productId)
+              ? {
+                  ...item,
+                  quantity: 1,
+                  selectedVariant: SPECIAL_ORDER_VARIANT,
+                  specialRequest,
+                }
+              : item,
+          ),
+        };
+      }
+
+      return {
+        ...state,
+        items: [
+          ...state.items,
+          {
+            productId: SPECIAL_ORDER_PRODUCT.id,
+            quantity: 1,
+            selectedVariant: SPECIAL_ORDER_VARIANT,
+            specialRequest,
+          },
+        ],
+      };
+    }
     case "remove":
       return {
         ...state,
@@ -198,6 +254,19 @@ const reducer = (state: CartState, action: CartAction): CartState => {
               : item,
           )
           .filter((item) => item.quantity > 0),
+      };
+    case "updateSpecialOrderRequest":
+      return {
+        ...state,
+        items: state.items.map((item) =>
+          isSpecialOrderProductId(item.productId)
+            ? {
+                ...item,
+                selectedVariant: SPECIAL_ORDER_VARIANT,
+                specialRequest: sanitizeSpecialRequest(action.request),
+              }
+            : item,
+        ),
       };
     case "setPromotionCode":
       return { ...state, promotionCode: normalizePromotionCode(action.code) };
@@ -242,7 +311,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [state.items, state.promotionCode]);
 
   const productMap = useMemo(
-    () => new Map(products.map((product) => [product.id, product])),
+    () =>
+      new Map(
+        [...products, SPECIAL_ORDER_PRODUCT].map((product) => [product.id, product]),
+      ),
     [],
   );
 
@@ -308,6 +380,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     track("add_to_cart", { productId, quantity, selectedVariant });
   };
 
+  const addSpecialOrder = (request: string) => {
+    const specialRequest = sanitizeSpecialRequest(request);
+    if (!specialRequest) return;
+
+    dispatch({ type: "addSpecialOrder", request: specialRequest });
+    track("add_to_cart", {
+      productId: SPECIAL_ORDER_PRODUCT.id,
+      quantity: 1,
+      selectedVariant: SPECIAL_ORDER_VARIANT,
+      specialRequest,
+    });
+  };
+
   const removeItem = (productId: string, selectedVariant?: string) => {
     dispatch({ type: "remove", productId, selectedVariant });
   };
@@ -318,6 +403,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     selectedVariant?: string,
   ) => {
     dispatch({ type: "update", productId, quantity, selectedVariant });
+  };
+
+  const updateSpecialOrderRequest = (request: string) => {
+    dispatch({ type: "updateSpecialOrderRequest", request });
   };
 
   const clear = () => dispatch({ type: "clear" });
@@ -341,8 +430,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     items: state.items,
     detailedItems,
     addItem,
+    addSpecialOrder,
     removeItem,
     updateQuantity,
+    updateSpecialOrderRequest,
     clear,
     applyPromotionCode,
     clearPromotionCode,

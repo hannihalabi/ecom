@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { products } from "@/data/products";
 import { applyPromotionDiscountCents, validatePromotionCode } from "@/lib/promotions";
+import {
+  isSpecialOrderProductId,
+  SPECIAL_ORDER_PRODUCT,
+  SPECIAL_ORDER_VARIANT,
+} from "@/lib/specialOrder";
 import { SHIPPING_COST_PER_PRODUCT } from "@/lib/shipping";
 import type { CartItem } from "@/types";
 
@@ -56,16 +61,26 @@ export async function POST(request: Request) {
 
   const lineItems = items
     .map((item) => {
-      const product = PRODUCT_MAP.get(item.productId);
-      if (!product) return null;
-
       const quantity = Number.isFinite(item.quantity) ? Math.floor(item.quantity) : 0;
       if (quantity <= 0) return null;
+
+      if (isSpecialOrderProductId(item.productId)) {
+        return {
+          product: SPECIAL_ORDER_PRODUCT,
+          quantity: 1,
+          selectedVariant: SPECIAL_ORDER_VARIANT,
+          specialRequest: safeText(item.specialRequest),
+        };
+      }
+
+      const product = PRODUCT_MAP.get(item.productId);
+      if (!product) return null;
 
       return {
         product,
         quantity,
         selectedVariant: safeText(item.selectedVariant),
+        specialRequest: "",
       };
     })
     .filter((line): line is NonNullable<typeof line> => Boolean(line));
@@ -129,39 +144,50 @@ export async function POST(request: Request) {
     params.set("metadata[promotion_percent_off]", String(promotion.percentOff));
   }
 
-  lineItems.forEach(({ product, quantity, selectedVariant }, index) => {
-    const baseUnitAmount = Math.round(product.priceDiscounted * 100);
-    const { discountedAmount: discountedUnitAmount } = applyPromotionDiscountCents(
-      baseUnitAmount,
-      promotion,
-    );
-
-    params.set(`line_items[${index}][quantity]`, String(quantity));
-    params.set(`line_items[${index}][price_data][currency]`, "sek");
-    params.set(
-      `line_items[${index}][price_data][unit_amount]`,
-      String(discountedUnitAmount),
-    );
-    params.set(
-      `line_items[${index}][price_data][product_data][name]`,
-      product.title,
-    );
-    params.set(
-      `line_items[${index}][price_data][product_data][metadata][product_id]`,
-      product.id,
-    );
-    params.set(
-      `line_items[${index}][price_data][product_data][metadata][product_slug]`,
-      product.slug,
-    );
-
-    if (selectedVariant) {
-      params.set(
-        `line_items[${index}][price_data][product_data][description]`,
-        selectedVariant,
+  lineItems.forEach(
+    ({ product, quantity, selectedVariant, specialRequest }, index) => {
+      const baseUnitAmount = Math.round(product.priceDiscounted * 100);
+      const { discountedAmount: discountedUnitAmount } = applyPromotionDiscountCents(
+        baseUnitAmount,
+        promotion,
       );
-    }
-  });
+
+      params.set(`line_items[${index}][quantity]`, String(quantity));
+      params.set(`line_items[${index}][price_data][currency]`, "sek");
+      params.set(
+        `line_items[${index}][price_data][unit_amount]`,
+        String(discountedUnitAmount),
+      );
+      params.set(
+        `line_items[${index}][price_data][product_data][name]`,
+        product.title,
+      );
+      params.set(
+        `line_items[${index}][price_data][product_data][metadata][product_id]`,
+        product.id,
+      );
+      params.set(
+        `line_items[${index}][price_data][product_data][metadata][product_slug]`,
+        product.slug,
+      );
+
+      if (specialRequest) {
+        params.set(
+          `line_items[${index}][price_data][product_data][description]`,
+          `Special order: ${specialRequest}`,
+        );
+        params.set(
+          `line_items[${index}][price_data][product_data][metadata][special_request]`,
+          specialRequest,
+        );
+      } else if (selectedVariant) {
+        params.set(
+          `line_items[${index}][price_data][product_data][description]`,
+          selectedVariant,
+        );
+      }
+    },
+  );
 
   params.set(`line_items[${lineItems.length}][quantity]`, String(totalItems));
   params.set(`line_items[${lineItems.length}][price_data][currency]`, "sek");

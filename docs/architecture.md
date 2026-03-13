@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-03-07
+Last updated: 2026-03-13
 
 ## System Overview
 SparkDeal is a Next.js App Router storefront prototype with static catalog data and client-side cart state.
@@ -18,16 +18,16 @@ There is no backend order service yet.
 - `components/`: UI by domain (`product`, `cart`, `checkout`, `search`, `layout`, `shared`)
 - `data/products.ts`: static product source of truth
 - `lib/shipping.ts`: shared shipping policy (`129 SEK` per product) and totals helper
-- `lib/products.ts`: derived read-model functions (filters, categories, related, paging)
-- `lib/bagMatch.ts`: helper logic for bag-request analysis steps and response copy
+- `lib/products.ts`: derived read-model functions (categories, search, related, paging)
+- `lib/specialOrder.ts`: synthetic special-order product and identifiers
 - `lib/promotions.ts`: discount-code validation and discount helpers
 - `store/cart.tsx`: cart state container + localStorage persistence
 - `types/index.ts`: domain types
 
 ## Route Map
-- `/`: landing page with hero/video, bag-request matcher, and product sections
-- `/p/[slug]`: product details + purchase panel + related products
-- `/search`: client-side search and filtering UI
+- `/`: landing page with hero/video and interactive model search
+- `/p/[slug]`: product details + purchase panel
+- `/search`: direct-entry version of the same hero search experience as `/`
 - `/cart`: cart detail + summary
 - `/checkout`: fallback route that immediately starts Stripe-hosted checkout
 - `/checkout/success`: payment success page
@@ -39,23 +39,23 @@ There is no backend order service yet.
 - Most pages are server components.
 - Interactive components opt into client mode (`"use client"`), including:
   - cart interactions
-  - search filter state
-  - bag-request matcher state + progress simulation
+  - hero search state + special-order creation
   - countdown timer
   - analytics tracking hooks
 
 ## Data Flow
 1. `data/products.ts` exports `products`.
-2. `lib/products.ts` derives category lists and sorted/filter slices.
-3. `lib/bagMatch.ts` provides loader steps and generated result copy for the home bag-request module.
-4. Route pages pass selected product sets into presentation components.
-5. `store/cart.tsx` manages cart actions, promotion-code state, and computed totals.
+2. `data/products.ts` normalizes catalog pricing into three customer-facing tiers: `2999`, `3499`, `3999`.
+3. `lib/products.ts` derives category lists, related products, and text search matches.
+4. `components/home/BagRequestMatcher.tsx` searches the static catalog client-side and either links to a matching product or creates a `Special order`.
+5. `store/cart.tsx` manages cart actions, promotion-code state, special-order request text, and computed totals.
 6. `components/cart/CartPage.tsx` starts checkout directly from the "Till kassan" CTA.
 7. `components/checkout/CheckoutRedirectClient.tsx` provides fallback redirect behavior for `/checkout`.
-8. Stripe Checkout Session is created server-side, optional promotion code is validated/applied, and client is redirected to Stripe-hosted payment.
+8. Stripe Checkout Session is created server-side, optional promotion code is validated/applied, and special-order request text is passed through line-item metadata/description before redirecting to Stripe-hosted payment.
 
 ## State and Persistence
 - Cart line items and active promotion code are persisted in browser localStorage under `dealflow_cart`.
+- Special-order request text is persisted on the relevant cart line in the same localStorage payload.
 - No server persistence for cart/orders/account.
 
 ## External Integrations
@@ -68,6 +68,7 @@ There is no backend order service yet.
 - Product identifiers and slugs are stable keys.
 - Image paths in catalog must resolve under `public/products/`.
 - Price fields are numeric and formatted via `lib/format.ts`.
+- Display pricing is constrained to three normalized tiers across the catalog.
 - Discount percentage is derived in `data/products.ts` when missing.
 - Shipping is fixed at `129 SEK` per product and is added in cart totals and Stripe checkout.
 - Promotion code behavior is governed by `lib/promotions.ts` and must stay consistent between cart totals and Stripe checkout line items.
@@ -82,7 +83,7 @@ There is no backend order service yet.
 - `getForYou()` is random, which can make output non-deterministic.
 - Orders/account are static mocks and may be mistaken for real backend-backed flows.
 - Analytics currently logs to console only.
-- Home bag-request matching is a client-side simulation and not connected to live inventory.
+- Hero search is a client-side catalog lookup and not connected to live inventory.
 - Stripe checkout depends on environment configuration and available outbound network.
 - Promotion windows in `lib/promotions.ts` are time-bound and can expire.
 - Catalog file names contain accent/Unicode combinations that can be fragile across tooling.

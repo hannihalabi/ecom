@@ -1,208 +1,210 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ProductGrid } from "@/components/product/ProductGrid";
-import { BAG_MATCH_STEPS, analyzeBagRequest } from "@/lib/bagMatch";
-import type { Product } from "@/types";
+import { useRouter } from "next/navigation";
+import { startTransition, useDeferredValue, useMemo, useState } from "react";
+import { formatMoney } from "@/lib/format";
+import { searchCatalogProducts } from "@/lib/products";
+import { useCart } from "@/store/cart";
 
-const ANALYSIS_DURATION_MS = 3000;
-
-type Phase = "idle" | "loading" | "done";
+const PRICE_POINTS = [2999, 3499, 3999] as const;
+const QUICK_SEARCHES = [
+  "Speedy Trunk",
+  "Neverfull",
+  "Ophidia",
+  "Boulogne",
+] as const;
 
 type BagRequestMatcherProps = {
-  suggestedProducts: Product[];
+  initialQuery?: string;
 };
 
 export const BagRequestMatcher = ({
-  suggestedProducts,
+  initialQuery = "",
 }: BagRequestMatcherProps) => {
-  const [requestValue, setRequestValue] = useState("");
-  const [submittedRequest, setSubmittedRequest] = useState("");
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [progress, setProgress] = useState(0);
-  const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const router = useRouter();
+  const { addSpecialOrder } = useCart();
+  const [query, setQuery] = useState(initialQuery);
+  const deferredQuery = useDeferredValue(query);
 
-  useEffect(() => {
-    if (phase !== "loading") {
-      return;
-    }
+  const normalizedQuery = deferredQuery.trim();
+  const matchingProducts = useMemo(
+    () => searchCatalogProducts(deferredQuery, 6),
+    [deferredQuery],
+  );
+  const availableMatches = useMemo(
+    () => matchingProducts.filter((product) => product.stock > 0),
+    [matchingProducts],
+  );
+  const shouldShowResults = normalizedQuery.length >= 2;
+  const shouldShowSpecialOrder = shouldShowResults && availableMatches.length === 0;
 
-    const startedAt = Date.now();
+  const handleSpecialOrder = () => {
+    const request = query.trim();
+    if (request.length < 2) return;
 
-    const progressTimer = window.setInterval(() => {
-      const elapsed = Date.now() - startedAt;
-      const ratio = Math.min(1, elapsed / ANALYSIS_DURATION_MS);
-      const nextProgress = Math.min(99, Math.round(ratio * 100));
-      const nextStep = Math.min(
-        BAG_MATCH_STEPS.length - 1,
-        Math.floor(ratio * BAG_MATCH_STEPS.length),
-      );
-
-      setProgress(nextProgress);
-      setActiveStepIndex(nextStep);
-    }, 70);
-
-    const completeTimer = window.setTimeout(() => {
-      setProgress(100);
-      setActiveStepIndex(BAG_MATCH_STEPS.length - 1);
-      setPhase("done");
-    }, ANALYSIS_DURATION_MS);
-
-    return () => {
-      window.clearInterval(progressTimer);
-      window.clearTimeout(completeTimer);
-    };
-  }, [phase]);
-
-  const result = useMemo(() => {
-    if (phase !== "done") {
-      return null;
-    }
-
-    return analyzeBagRequest(submittedRequest);
-  }, [phase, submittedRequest]);
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const trimmedRequest = requestValue.trim();
-    if (trimmedRequest.length < 6) {
-      setErrorMessage("Beskriv gärna väskan med minst 6 tecken.");
-      return;
-    }
-
-    setErrorMessage(null);
-    setSubmittedRequest(trimmedRequest);
-    setPhase("loading");
-    setProgress(0);
-    setActiveStepIndex(0);
+    addSpecialOrder(request);
+    startTransition(() => {
+      router.push("/cart");
+    });
   };
 
   return (
     <section
       id="onskemal"
-      className="lux-panel animate-rise px-4 py-6 md:px-8 md:py-8"
+      className="relative left-1/2 min-h-[calc(100svh-2rem)] w-screen -translate-x-1/2 overflow-hidden"
     >
-      <div className="flex flex-col gap-5">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--lux-accent-strong)]">
-            Önskemålstjänst
-          </p>
-          <h2 className="lux-title text-2xl leading-tight md:text-3xl">
-            Beskriv din drömväska så matchar vi direkt
-          </h2>
-          <p className="lux-subtitle text-sm md:text-base">
-            Skriv stil, färg, storlek eller användningsområde. Vi analyserar och
-            visar väskor som passar.
-          </p>
-        </div>
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        src="/mp4/gucci1.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,11,7,0.3),rgba(18,11,7,0.78))]" />
+      <div className="absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top,rgba(245,226,191,0.28),transparent_60%)]" />
 
-        <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
-          <label htmlFor="bag-request" className="sr-only">
-            Beskriv din drömväska
-          </label>
-          <textarea
-            id="bag-request"
-            rows={3}
-            value={requestValue}
-            onChange={(event) => setRequestValue(event.target.value)}
-            placeholder="Exempel: En svart axelväska i mediumstorlek för jobb och resa"
-            className="w-full rounded-2xl border border-[rgba(163,124,75,0.48)] bg-[rgba(252,245,236,0.92)] px-4 py-3 text-sm text-[var(--lux-ink)] outline-none transition focus:border-[var(--lux-accent-strong)] focus:ring-2 focus:ring-[rgba(166,123,78,0.2)]"
-          />
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="submit"
-              disabled={phase === "loading"}
-              className="rounded-full border border-[rgba(163,124,75,0.5)] bg-[var(--lux-dark)] px-5 py-2.5 text-sm font-semibold text-[rgba(251,239,221,0.96)] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {phase === "loading" ? "Analyserar..." : "Analysera önskemål"}
-            </button>
-            {errorMessage && (
-              <p className="text-sm text-[var(--lux-accent-strong)]">{errorMessage}</p>
-            )}
-          </div>
-        </form>
-
-        {phase === "loading" && (
-          <div className="rounded-2xl border border-[rgba(163,124,75,0.42)] bg-[rgba(248,238,223,0.76)] p-4">
-            <div
-              className="h-2 overflow-hidden rounded-full bg-[rgba(163,124,75,0.24)]"
-              role="progressbar"
-              aria-label="Analysstatus"
-              aria-valuenow={progress}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,var(--lux-accent),var(--lux-gold))] transition-[width] duration-200"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <p className="mt-2 text-sm font-medium text-[var(--lux-muted)]">
-              {progress}% klart
+      <div className="relative mx-auto flex min-h-[calc(100svh-2rem)] max-w-6xl items-center px-4 py-8 md:px-6">
+        <div className="grid w-full gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+          <div className="flex flex-col gap-5 text-[rgba(251,239,221,0.96)] animate-rise">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[rgba(244,223,191,0.84)]">
+              Curated luxury search
             </p>
-            <ul className="mt-4 flex flex-col gap-2 text-sm">
-              {BAG_MATCH_STEPS.map((step, index) => {
-                const isActive = index <= activeStepIndex;
-                return (
-                  <li
-                    key={step}
-                    className={isActive ? "text-[var(--lux-ink)]" : "text-[var(--lux-muted)]"}
+            <div className="space-y-3">
+              <h1 className="max-w-2xl text-4xl leading-[0.94] md:text-6xl">
+                Hitta rätt väska utan att bläddra bland hela lagret
+              </h1>
+              <p className="max-w-xl text-sm text-[rgba(247,233,210,0.84)] md:text-base">
+                Vi visar bara en träfflista när du söker. Alla modeller ligger inom
+                våra tre tydliga prisnivåer: 2 999 kr, 3 499 kr eller 3 999 kr.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.12em] text-[rgba(251,239,221,0.92)]">
+              {PRICE_POINTS.map((price) => (
+                <span
+                  key={price}
+                  className="rounded-full border border-[rgba(244,223,191,0.38)] bg-[rgba(22,15,11,0.38)] px-4 py-2 backdrop-blur"
+                >
+                  {formatMoney(price)}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="lux-panel animate-rise stagger-1 p-4 md:p-6">
+            <div className="flex flex-col gap-4">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lux-accent-strong)]">
+                  Sök modell
+                </p>
+                <h2 className="lux-title text-2xl leading-tight md:text-3xl">
+                  Börja med ett namn, en modell eller en silhuett
+                </h2>
+                <p className="lux-subtitle text-sm md:text-base">
+                  Exempel: Speedy Trunk, Neverfull eller Ophidia.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {QUICK_SEARCHES.map((term) => (
+                  <button
+                    key={term}
+                    type="button"
+                    onClick={() => setQuery(term)}
+                    className="rounded-full border border-[rgba(163,124,75,0.4)] bg-[rgba(255,248,239,0.72)] px-3 py-1.5 text-xs font-semibold text-[var(--lux-accent-strong)]"
                   >
-                    {isActive ? "●" : "○"} {step}...
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
-
-        {phase === "done" && result && (
-          <div className="flex flex-col gap-4">
-            <div className="rounded-2xl border border-[rgba(163,124,75,0.5)] bg-[linear-gradient(160deg,rgba(248,238,223,0.9),rgba(240,223,195,0.82))] p-4 md:p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lux-accent-strong)]">
-                Resultat klart
-              </p>
-              <h3 className="mt-1 text-xl [font-family:var(--font-display)] text-[var(--lux-ink)] md:text-2xl">
-                {result.title}
-              </h3>
-              <p className="mt-2 text-sm text-[var(--lux-muted)] md:text-base">
-                {result.message}
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                <span className="rounded-full border border-[rgba(163,124,75,0.48)] bg-[rgba(255,249,240,0.65)] px-3 py-1.5 font-medium text-[var(--lux-ink)]">
-                  Matchningsgrad: {result.confidence}%
-                </span>
-                <span className="rounded-full border border-[rgba(163,124,75,0.48)] bg-[rgba(255,249,240,0.65)] px-3 py-1.5 font-medium text-[var(--lux-ink)]">
-                  Leverans: 2-4 vardagar
-                </span>
+                    {term}
+                  </button>
+                ))}
               </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link
-                  href="/search"
-                  className="rounded-full border border-[rgba(163,124,75,0.5)] bg-[var(--lux-dark)] px-4 py-2 text-sm font-semibold text-[rgba(251,239,221,0.96)]"
-                >
-                  Se fler rekommendationer
-                </Link>
-                <Link
-                  href="/cart"
-                  className="rounded-full border border-[rgba(163,124,75,0.5)] bg-[rgba(255,249,240,0.85)] px-4 py-2 text-sm font-semibold text-[var(--lux-accent-strong)]"
-                >
-                  Gå till varukorgen
-                </Link>
-              </div>
-            </div>
 
-            <div className="flex flex-col gap-3">
-              <h3 className="text-xl [font-family:var(--font-display)] text-[var(--lux-ink)] md:text-2xl">
-                Rekommenderade väskor för dig
-              </h3>
-              <ProductGrid products={suggestedProducts} />
+              <label htmlFor="bag-search" className="sr-only">
+                Sök efter väska
+              </label>
+              <div className="rounded-[28px] border border-[rgba(163,124,75,0.48)] bg-[rgba(255,250,243,0.88)] p-3 shadow-[0_18px_34px_rgba(47,31,15,0.12)]">
+                <input
+                  id="bag-search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Skriv modellnamn, till exempel Speedy Trunk"
+                  className="h-14 w-full bg-transparent px-3 text-base text-[var(--lux-ink)] outline-none placeholder:text-[rgba(111,90,71,0.78)]"
+                />
+              </div>
+
+              {!shouldShowResults && (
+                <div className="rounded-2xl border border-[rgba(163,124,75,0.3)] bg-[rgba(255,250,243,0.56)] p-4 text-sm text-[var(--lux-muted)]">
+                  Börja skriva så visar vi relevanta modeller direkt, utan att du
+                  behöver gå igenom hela sortimentet.
+                </div>
+              )}
+
+              {availableMatches.length > 0 && shouldShowResults && (
+                <div className="flex max-h-[26rem] flex-col gap-3 overflow-y-auto pr-1">
+                  {availableMatches.map((product) => (
+                    <Link
+                      key={product.id}
+                      href={`/p/${product.slug}`}
+                      className="group flex items-center gap-3 rounded-2xl border border-[rgba(163,124,75,0.28)] bg-[rgba(255,250,243,0.82)] p-3 transition hover:border-[rgba(137,99,60,0.52)] hover:bg-[rgba(255,251,246,0.96)]"
+                    >
+                      <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl">
+                        <Image
+                          src={product.images[0]}
+                          alt={product.title}
+                          fill
+                          sizes="80px"
+                          className="object-cover transition duration-300 group-hover:scale-[1.03]"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-[var(--lux-ink)]">
+                          {product.title}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--lux-muted)]">
+                          {product.category} • {formatMoney(product.priceDiscounted)}
+                        </p>
+                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--lux-accent-strong)]">
+                          Visa modell
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {shouldShowSpecialOrder && (
+                <div className="rounded-[28px] border border-[rgba(163,124,75,0.45)] bg-[linear-gradient(160deg,rgba(248,238,223,0.94),rgba(240,223,195,0.86))] p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lux-accent-strong)]">
+                    Specialdesign
+                  </p>
+                  <h3 className="mt-2 text-2xl text-[var(--lux-ink)]">
+                    Goda nyheter! Vi kan special designa väskan åt dig.
+                  </h3>
+                  <p className="mt-2 text-sm text-[var(--lux-muted)]">
+                    Vi hittar ingen lagerförd träff på "{normalizedQuery}", men du kan
+                    gå vidare med en special order direkt nu.
+                  </p>
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleSpecialOrder}
+                      className="rounded-full border border-[rgba(163,124,75,0.5)] bg-[var(--lux-dark)] px-5 py-3 text-sm font-semibold text-[rgba(251,239,221,0.96)]"
+                    >
+                      Skapa special order
+                    </button>
+                    <span className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--lux-accent-strong)]">
+                      Från {formatMoney(3999)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );

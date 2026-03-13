@@ -18,7 +18,7 @@ export const TopBar = () => {
           href="/search"
           className="hidden rounded-full border border-[rgba(166,123,78,0.45)] bg-[rgba(251,246,237,0.92)] px-5 py-2 text-sm text-[var(--lux-muted)] shadow-[0_6px_18px_rgba(47,31,15,0.08)] transition hover:border-[rgba(137,99,60,0.55)] md:block md:flex-1"
         >
-          Sök erbjudanden, varumärken, kategorier...
+          Sök modell, varumärke eller silhuett...
         </Link>
         <div className="hidden text-[11px] uppercase tracking-[0.12em] text-[var(--lux-muted)] md:block">
           {formatMoney(SHIPPING_COST_PER_PRODUCT)} frakt per produkt | 30 dagars öppet köp

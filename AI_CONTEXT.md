@@ -1,6 +1,6 @@
 # AI_CONTEXT
 
-Senast uppdaterad: 2026-03-07
+Senast uppdaterad: 2026-03-13
 
 ## Syfte
 Denna fil lagrar stabil projektkontext sa att nya Codex-sessioner snabbt kan leverera jamn kvalitet.
@@ -9,8 +9,8 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 ## Produktsnapshot
 - Produktnamn: SparkDeal
 - Typ: Mobilanpassad e-handelsapp (demo/prototyp)
-- Primart flode: Hem -> Produktsida -> Varukorg -> Kassa -> Bestallningar/Konto
-- Startsidan har ett interaktivt onskemalsflode som simulerar matchning av dromvaska och visar rekommenderade produkter
+- Primart flode: Hem/Search -> Produktsida eller Special order -> Varukorg -> Kassa -> Bestallningar/Konto
+- Startsidan och `/search` visar en hero-baserad modellsokning i stallet for publika produktgridar
 - Sprak och lokal: Svenska copy-texter, valuta i SEK (`sv-SE`)
 
 ## Tech Stack
@@ -34,17 +34,18 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 
 ## Arkitektur och dataflode
 1. Produktdata laddas statiskt fran `data/products.ts`.
-2. Produktlistor/urval byggs via `lib/products.ts` (kategorier, flash deals, trending, paginering, relaterat, etc).
-3. Startsidans onskemalsanalys far steg/resultatcopy via `lib/bagMatch.ts` och visar rekommenderade produkter.
-4. UI renderar i App Router-sidor under `app/`.
-5. Varukorgen hanteras klientside i `store/cart.tsx` och persisteras i localStorage med nyckeln `dealflow_cart` (rader + aktiv rabattkod).
-6. Checkout initieras direkt fran varukorgens CTA i `components/cart/CartPage.tsx` och via fallback i `components/checkout/CheckoutRedirectClient.tsx`, som skickar varukorgens rader (+ ev. rabattkod) till `app/api/stripe/checkout/route.ts`.
-7. Analytik ar idag en placeholder (`console.info`) i `lib/analytics.ts`.
+2. Produktlistor/urval byggs via `lib/products.ts` (kategorier, sokning, relaterat, etc), men visas inte langre som oppna gridar pa hem/sok.
+3. Startsidans modellsokning sker i `components/home/BagRequestMatcher.tsx` med katalogtraffar fran `lib/products.ts`.
+4. Om ingen lagerford modell matchar skapas en `Special order` via `lib/specialOrder.ts` och `store/cart.tsx`.
+5. UI renderar i App Router-sidor under `app/`.
+6. Varukorgen hanteras klientside i `store/cart.tsx` och persisteras i localStorage med nyckeln `dealflow_cart` (rader + aktiv rabattkod).
+7. Checkout initieras direkt fran varukorgens CTA i `components/cart/CartPage.tsx` och via fallback i `components/checkout/CheckoutRedirectClient.tsx`, som skickar varukorgens rader (+ ev. rabattkod och special-order-text) till `app/api/stripe/checkout/route.ts`.
+8. Analytik ar idag en placeholder (`console.info`) i `lib/analytics.ts`.
 
 ## Routekarta (huvud)
-- `/` hem: hero/video, onskemalsanalys, urvalssektioner, paginerad alla-produkter
+- `/` hem: hero/video med interaktiv modellsokning och special-order-CTA
 - `/p/[slug]`: produktsida med metadata, JSON-LD, galleri, kop-panel, relaterade produkter
-- `/search`: sok + filter + sortering
+- `/search`: samma modellsokning som pa hem, for direktlankning med query
 - `/cart`: varukorg
 - `/checkout`: kassa med redirect till Stripe Checkout
 - `/checkout/success`: bekräftelsesida efter lyckad Stripe-betalning
@@ -56,9 +57,11 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `Product.id` och `Product.slug` maste vara stabila och unika.
 - `Product.images` maste vara giltiga filer under `public/products/...`.
 - Priser representeras som numeriska kronor (inte oren stranglogik).
+- Katalogens visade saljpriser normaliseras till tre prisnivaer: `2999`, `3499`, `3999`.
 - `formatMoney` ska fortsatt anvanda `sv-SE` + `SEK` for konsekvent visning.
 - Frakt ar fast `129 kr` per produkt (`lib/shipping.ts`) och inkluderas i varukorg/checkout.
 - Varukorgsrad identifieras av (`productId` + `selectedVariant`).
+- `specialRequest` pa en varukorgsrad anvands endast for `Special order` och skickas vidare till Stripe som radbeskrivning/metadata.
 - Rabattkoder valideras via `lib/promotions.ts` och appliceras i varukorgens totalsummering samt i Stripe-sessionens produkt-rader.
 - Stripe-checkout kraver `STRIPE_SECRET_KEY` samt korrekt `NEXT_PUBLIC_APP_URL`.
 - Ingen backend-orderpersistens an: `orders`/`account` ar fortsatt mock.
@@ -72,8 +75,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 
 ## Kanda begransningar / risker
 - `orders` och `account` ar statiska mock-sidor.
-- `getForYou()` ar slumpbaserad och inte deterministisk mellan renderingar.
-- Onskemalsanalysen pa startsidan ar en frontend-simulering och ar inte kopplad till lagerbackend.
+- Katalogsokningen ar klientsidebaserad mot statisk produktdata och speglar inte ett riktigt lagersystem.
 - Checkout beror pa giltig Stripe-konfiguration i miljo/hosting.
 - Kampanjer i `lib/promotions.ts` ar tidsstyrda och maste hallas uppdaterade for att fortsatt ge rabatt.
 - Dokumentation kan drifta om `README.md`, `AI_CONTEXT.md` och `docs/architecture.md` inte uppdateras tillsammans.

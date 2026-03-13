@@ -1,6 +1,14 @@
 import { products } from "@/data/products";
 import { Product } from "@/types";
 
+const normalizeSearchValue = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
 export const getAllProducts = () => products;
 
 export const getProductBySlug = (slug: string) =>
@@ -41,4 +49,40 @@ export const getPaginated = (page: number, perPage: number) => {
   const items = products.slice(start, end);
   const totalPages = Math.max(1, Math.ceil(products.length / perPage));
   return { items, totalPages };
+};
+
+export const searchCatalogProducts = (query: string, limit = 6) => {
+  const normalizedQuery = normalizeSearchValue(query);
+  if (!normalizedQuery) return [];
+
+  const queryTerms = normalizedQuery.split(" ").filter(Boolean);
+
+  return [...products]
+    .map((product) => {
+      const title = normalizeSearchValue(product.title);
+      const tags = product.tags.map(normalizeSearchValue);
+      const category = normalizeSearchValue(product.category);
+
+      let score = 0;
+
+      if (title.includes(normalizedQuery)) score += 12;
+      if (category.includes(normalizedQuery)) score += 5;
+
+      score += queryTerms.reduce((sum, term) => {
+        let termScore = 0;
+        if (title.includes(term)) termScore += 4;
+        if (category.includes(term)) termScore += 2;
+        if (tags.some((tag) => tag.includes(term))) termScore += 2;
+        return sum + termScore;
+      }, 0);
+
+      return { product, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return b.product.reviewCount - a.product.reviewCount;
+    })
+    .slice(0, limit)
+    .map(({ product }) => product);
 };
