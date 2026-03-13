@@ -4,11 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useDeferredValue, useMemo, useState } from "react";
-import { formatMoney } from "@/lib/format";
 import { searchCatalogProducts } from "@/lib/products";
 import { useCart } from "@/store/cart";
 
-const PRICE_POINTS = [2999, 3499, 3999] as const;
 const QUICK_SEARCHES = [
   "Speedy Trunk",
   "Neverfull",
@@ -69,33 +67,7 @@ export const BagRequestMatcher = ({
       <div className="absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top,rgba(245,226,191,0.28),transparent_60%)]" />
 
       <div className="relative mx-auto flex min-h-[calc(100svh-2rem)] max-w-6xl items-center px-4 py-8 md:px-6">
-        <div className="grid w-full gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
-          <div className="flex flex-col gap-5 text-[rgba(251,239,221,0.96)] animate-rise">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[rgba(244,223,191,0.84)]">
-              Curated luxury search
-            </p>
-            <div className="space-y-3">
-              <h1 className="max-w-2xl text-4xl leading-[0.94] md:text-6xl">
-                Hitta rätt väska utan att bläddra bland hela lagret
-              </h1>
-              <p className="max-w-xl text-sm text-[rgba(247,233,210,0.84)] md:text-base">
-                Vi visar bara en träfflista när du söker. Alla modeller ligger inom
-                våra tre tydliga prisnivåer: 2 999 kr, 3 499 kr eller 3 999 kr.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.12em] text-[rgba(251,239,221,0.92)]">
-              {PRICE_POINTS.map((price) => (
-                <span
-                  key={price}
-                  className="rounded-full border border-[rgba(244,223,191,0.38)] bg-[rgba(22,15,11,0.38)] px-4 py-2 backdrop-blur"
-                >
-                  {formatMoney(price)}
-                </span>
-              ))}
-            </div>
-          </div>
-
+        <div className="mx-auto w-full max-w-2xl">
           <div className="lux-panel animate-rise stagger-1 p-4 md:p-6">
             <div className="flex flex-col gap-4">
               <div className="space-y-2">
@@ -196,9 +168,6 @@ export const BagRequestMatcher = ({
                     >
                       Skapa special order
                     </button>
-                    <span className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--lux-accent-strong)]">
-                      Från {formatMoney(3999)}
-                    </span>
                   </div>
                 </div>
               )}
