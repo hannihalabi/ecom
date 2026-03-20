@@ -2,18 +2,39 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { validatePromotionCode } from "@/lib/promotions";
 import { WEBSITE_OFFERS } from "@/lib/websiteOffers";
 
 export const PriceHero = () => {
   const router = useRouter();
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
+  const [promotionInput, setPromotionInput] = useState("");
+  const [activePromotionCode, setActivePromotionCode] = useState<string | null>(null);
+  const [promotionError, setPromotionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleSelectOffer = (offerId: string) => {
     setSelectedOfferId(offerId);
     startTransition(() => {
-      router.push(`/checkout?offer=${offerId}`);
+      const params = new URLSearchParams({ offer: offerId });
+      if (activePromotionCode) {
+        params.set("promo", activePromotionCode);
+      }
+      router.push(`/checkout?${params.toString()}`);
     });
+  };
+
+  const handleActivatePromotion = () => {
+    const { normalized, error } = validatePromotionCode(promotionInput);
+    if (error) {
+      setPromotionError(error);
+      setActivePromotionCode(null);
+      return;
+    }
+
+    setPromotionInput(normalized);
+    setActivePromotionCode(normalized);
+    setPromotionError(null);
   };
 
   return (
@@ -54,6 +75,45 @@ export const PriceHero = () => {
                   </button>
                 );
               })}
+            </div>
+
+            <div className="rounded-[28px] border border-[rgba(163,124,75,0.35)] bg-[rgba(255,250,243,0.72)] p-4 text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lux-accent-strong)]">
+                Rabattkod
+              </p>
+              <form
+                className="mt-3 flex flex-col gap-2 sm:flex-row"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleActivatePromotion();
+                }}
+              >
+                <input
+                  value={promotionInput}
+                  onChange={(event) => {
+                    setPromotionInput(event.target.value);
+                    if (promotionError) {
+                      setPromotionError(null);
+                    }
+                  }}
+                  placeholder="Skriv rabattkod"
+                  className="h-12 flex-1 rounded-full border border-[rgba(163,124,75,0.35)] bg-[rgba(255,255,255,0.82)] px-4 text-sm font-semibold uppercase tracking-[0.08em] text-[var(--lux-ink)] outline-none placeholder:text-[rgba(111,90,71,0.7)]"
+                />
+                <button
+                  type="submit"
+                  className="h-12 rounded-full border border-[rgba(163,124,75,0.45)] bg-[var(--lux-dark)] px-5 text-sm font-semibold text-[rgba(251,239,221,0.96)]"
+                >
+                  Aktivera
+                </button>
+              </form>
+              {activePromotionCode && (
+                <p className="mt-3 text-sm font-semibold text-emerald-700">
+                  Kod {activePromotionCode} aktiv. 25% rabatt tillampas i kassan.
+                </p>
+              )}
+              {promotionError && (
+                <p className="mt-3 text-sm text-rose-700">{promotionError}</p>
+              )}
             </div>
           </div>
         </div>

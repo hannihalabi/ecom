@@ -4,13 +4,13 @@ export type Promotion = {
   endsAt: Date;
 };
 
-const MAND20_PROMO: Promotion = {
-  code: "MAND20",
-  percentOff: 20,
-  endsAt: new Date(2026, 2, 31, 23, 59, 59, 999),
+const MAND25_PROMO: Promotion = {
+  code: "MAND25",
+  percentOff: 25,
+  endsAt: new Date(2026, 11, 31, 23, 59, 59, 999),
 };
 
-const PROMOTIONS = [MAND20_PROMO];
+const PROMOTIONS = [MAND25_PROMO];
 
 export const normalizePromotionCode = (code?: string) =>
   code ? code.trim().toUpperCase() : "";

@@ -9,10 +9,12 @@ import { useCart } from "@/store/cart";
 
 type CheckoutRedirectClientProps = {
   websiteOfferId?: WebsiteOfferId;
+  websitePromotionCode?: string;
 };
 
 export const CheckoutRedirectClient = ({
   websiteOfferId,
+  websitePromotionCode,
 }: CheckoutRedirectClientProps) => {
   const { detailedItems, promotionCode } = useCart();
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,9 @@ export const CheckoutRedirectClient = ({
             ? undefined
             : detailedItems.map(({ item }) => item),
           promotionCode:
-            hasDirectOfferCheckout ? undefined : promotionCode ?? undefined,
+            hasDirectOfferCheckout
+              ? websitePromotionCode
+              : promotionCode ?? undefined,
           websiteOfferId: websiteOffer?.id,
         });
         window.location.assign(url);
@@ -68,6 +72,7 @@ export const CheckoutRedirectClient = ({
     hasDirectOfferCheckout,
     promotionCode,
     websiteOffer,
+    websitePromotionCode,
   ]);
 
   if (!hasDirectOfferCheckout && detailedItems.length === 0) {

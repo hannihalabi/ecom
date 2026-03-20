@@ -128,7 +128,7 @@ export async function POST(request: Request) {
   const customerName = [safeText(customer.firstName), safeText(customer.lastName)]
     .filter(Boolean)
     .join(" ");
-  const rawPromotionCode = websiteOffer ? "" : safeText(body.promotionCode);
+  const rawPromotionCode = safeText(body.promotionCode);
   const promotionValidation = rawPromotionCode
     ? validatePromotionCode(rawPromotionCode)
     : {

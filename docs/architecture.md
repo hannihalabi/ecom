@@ -45,8 +45,8 @@ There is no backend order service yet.
   - analytics tracking hooks
 
 ## Data Flow
-1. `components/home/PriceHero.tsx` renders the public-facing hero video and three fixed price options.
-2. The selected option is encoded into `/checkout?offer=<id>`.
+1. `components/home/PriceHero.tsx` renders the public-facing hero video, three fixed price options, and a promo-code segment.
+2. The selected option is encoded into `/checkout?offer=<id>` and carries an activated promo code when present.
 3. `lib/websiteOffers.ts` defines the three website-visible offers: `2599`, `2899`, `3499`.
 4. `components/checkout/CheckoutRedirectClient.tsx` starts checkout directly from the selected offer.
 5. `app/api/stripe/checkout/route.ts` creates the Stripe Checkout Session for either a direct website offer or the legacy cart-based flow.
@@ -70,6 +70,7 @@ There is no backend order service yet.
 - Price fields are numeric and formatted via `lib/format.ts`.
 - Display pricing is constrained to three normalized tiers across the catalog.
 - The public website surface only exposes three fixed direct-checkout prices: `2599`, `2899`, `3499`.
+- The public hero flow currently supports the campaign code `MAND25` for 25% off.
 - Discount percentage is derived in `data/products.ts` when missing.
 - Shipping is fixed at `129 SEK` per product and is added in cart totals and Stripe checkout.
 - Promotion code behavior is governed by `lib/promotions.ts` and must stay consistent between cart totals and Stripe checkout line items.

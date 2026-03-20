@@ -33,8 +33,8 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `AGENTS.md`: Repo-specifik sessionsrutin
 
 ## Arkitektur och dataflode
-1. Startsidan renderar hero-komponenten `components/home/PriceHero.tsx` med video och tre fasta prisval.
-2. Ett klick pa en prisniva skickar besokaren till `/checkout?offer=...`.
+1. Startsidan renderar hero-komponenten `components/home/PriceHero.tsx` med video, tre fasta prisval och ett rabattfaltet for kampanjkoder.
+2. Ett klick pa en prisniva skickar besokaren till `/checkout?offer=...` och inkluderar ev. aktiverad rabattkod.
 3. `components/checkout/CheckoutRedirectClient.tsx` startar Stripe Checkout for vald prisniva direkt mot `app/api/stripe/checkout/route.ts`.
 4. `lib/websiteOffers.ts` ar sanningskallan for de tre prisnivaerna `2599`, `2899`, `3499`.
 5. Varukorg, katalog, produktsidor och special-order-flode finns kvar i repot men ar inte del av det aktiva publika huvudflodet.
@@ -59,6 +59,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - Varukorgsrad identifieras av (`productId` + `selectedVariant`).
 - `specialRequest` pa en varukorgsrad anvands endast for `Special order` och skickas vidare till Stripe som radbeskrivning/metadata.
 - Rabattkoder valideras via `lib/promotions.ts` och appliceras i varukorgens totalsummering samt i Stripe-sessionens produkt-rader.
+- Aktiv kampanjkod i det publika hero-flodet ar for narvarande `MAND25` och ger 25% rabatt vid direkt-checkout.
 - Stripe-checkout kraver `STRIPE_SECRET_KEY` samt korrekt `NEXT_PUBLIC_APP_URL`.
 - Ingen backend-orderpersistens an: `orders`/`account` ar fortsatt mock.
 

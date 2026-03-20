@@ -49,6 +49,7 @@ Open `http://localhost:3000`.
   - `2599 kr`
   - `2899 kr`
   - `3499 kr`
+- Home page also includes a discount-code segment. `MAND25` gives `25%` off when activated.
 - Clicking a price sends the visitor to `/checkout`, which immediately starts Stripe checkout.
 - Search and catalog-driven entry flows are hidden from the public landing experience.
 - Cart is still persisted in localStorage (`dealflow_cart`) for legacy/fallback flows.
