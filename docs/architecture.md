@@ -1,9 +1,9 @@
 # Architecture
 
-Last updated: 2026-03-13
+Last updated: 2026-03-20
 
 ## System Overview
-SparkDeal is a Next.js App Router storefront prototype with static catalog data and client-side cart state.
+SparkDeal is a Next.js App Router storefront prototype centered on a single hero video and three fixed checkout price points.
 There is no backend order service yet.
 
 ## Stack
@@ -20,16 +20,17 @@ There is no backend order service yet.
 - `lib/shipping.ts`: shared shipping policy (`129 SEK` per product) and totals helper
 - `lib/products.ts`: derived read-model functions (categories, search, related, paging)
 - `lib/specialOrder.ts`: synthetic special-order product and identifiers
+- `lib/websiteOffers.ts`: fixed website offer definitions for direct checkout
 - `lib/promotions.ts`: discount-code validation and discount helpers
 - `store/cart.tsx`: cart state container + localStorage persistence
 - `types/index.ts`: domain types
 
 ## Route Map
-- `/`: landing page with hero/video and interactive model search
-- `/p/[slug]`: product details + purchase panel
-- `/search`: direct-entry version of the same hero search experience as `/`
-- `/cart`: cart detail + summary
-- `/checkout`: fallback route that immediately starts Stripe-hosted checkout
+- `/`: landing page with hero/video and three fixed price selections
+- `/p/[slug]`: legacy product details + purchase panel
+- `/search`: legacy route redirected back to `/`
+- `/cart`: legacy cart detail + summary
+- `/checkout`: redirect route that starts Stripe-hosted checkout for a selected website offer or fallback cart flow
 - `/checkout/success`: payment success page
 - `/checkout/cancel`: payment canceled page
 - `/orders`: mock order history
@@ -38,25 +39,24 @@ There is no backend order service yet.
 ## Rendering Model
 - Most pages are server components.
 - Interactive components opt into client mode (`"use client"`), including:
-  - cart interactions
-  - hero search state + special-order creation
-  - countdown timer
+  - price selection on the home hero
+  - checkout redirect bootstrapping
+  - cart interactions in legacy flows
   - analytics tracking hooks
 
 ## Data Flow
-1. `data/products.ts` exports `products`.
-2. `data/products.ts` normalizes catalog pricing into three customer-facing tiers: `2999`, `3499`, `3999`.
-3. `lib/products.ts` derives category lists, related products, and text search matches.
-4. `components/home/BagRequestMatcher.tsx` searches the static catalog client-side and either links to a matching product or creates a `Special order`.
-5. `store/cart.tsx` manages cart actions, promotion-code state, special-order request text, and computed totals.
-6. `components/cart/CartPage.tsx` starts checkout directly from the "Till kassan" CTA.
-7. `components/checkout/CheckoutRedirectClient.tsx` provides fallback redirect behavior for `/checkout`.
-8. Stripe Checkout Session is created server-side, optional promotion code is validated/applied, and special-order request text is passed through line-item metadata/description before redirecting to Stripe-hosted payment.
+1. `components/home/PriceHero.tsx` renders the public-facing hero video and three fixed price options.
+2. The selected option is encoded into `/checkout?offer=<id>`.
+3. `lib/websiteOffers.ts` defines the three website-visible offers: `2599`, `2899`, `3499`.
+4. `components/checkout/CheckoutRedirectClient.tsx` starts checkout directly from the selected offer.
+5. `app/api/stripe/checkout/route.ts` creates the Stripe Checkout Session for either a direct website offer or the legacy cart-based flow.
+6. Catalog, cart, product pages, search helpers, and special-order logic remain in the repository as legacy/fallback functionality.
 
 ## State and Persistence
 - Cart line items and active promotion code are persisted in browser localStorage under `dealflow_cart`.
 - Special-order request text is persisted on the relevant cart line in the same localStorage payload.
 - No server persistence for cart/orders/account.
+- The direct website-offer checkout path does not require cart state.
 
 ## External Integrations
 - Stripe Checkout is called from `app/api/stripe/checkout/route.ts`.
@@ -69,6 +69,7 @@ There is no backend order service yet.
 - Image paths in catalog must resolve under `public/products/`.
 - Price fields are numeric and formatted via `lib/format.ts`.
 - Display pricing is constrained to three normalized tiers across the catalog.
+- The public website surface only exposes three fixed direct-checkout prices: `2599`, `2899`, `3499`.
 - Discount percentage is derived in `data/products.ts` when missing.
 - Shipping is fixed at `129 SEK` per product and is added in cart totals and Stripe checkout.
 - Promotion code behavior is governed by `lib/promotions.ts` and must stay consistent between cart totals and Stripe checkout line items.
@@ -83,7 +84,7 @@ There is no backend order service yet.
 - `getForYou()` is random, which can make output non-deterministic.
 - Orders/account are static mocks and may be mistaken for real backend-backed flows.
 - Analytics currently logs to console only.
-- Hero search is a client-side catalog lookup and not connected to live inventory.
+- Legacy catalog/search/cart code can drift because the public UX no longer exercises it as the primary path.
 - Stripe checkout depends on environment configuration and available outbound network.
 - Promotion windows in `lib/promotions.ts` are time-bound and can expire.
 - Catalog file names contain accent/Unicode combinations that can be fragile across tooling.

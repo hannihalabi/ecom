@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useDeferredValue, useMemo, useState } from "react";
+import { formatMoney } from "@/lib/format";
 import { searchCatalogProducts } from "@/lib/products";
 import { useCart } from "@/store/cart";
 

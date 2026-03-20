@@ -53,7 +53,7 @@ export const CartPage = () => {
       <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-10 text-center">
         <h1 className="text-xl font-semibold text-slate-900">Din varukorg är tom</h1>
         <p className="text-sm text-slate-600">
-          Sök efter en modell eller skapa en special order för att komma vidare.
+          Gå tillbaka till startsidan och välj en prisnivå för att komma vidare.
         </p>
         <Link
           href="/"

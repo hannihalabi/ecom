@@ -1,7 +1,7 @@
 # SparkDeal
 
 SparkDeal is a mobile-first e-commerce storefront prototype built with Next.js App Router.
-It focuses on fast browsing, clear discounts, and a simple checkout flow.
+It now focuses on a single hero-video landing page with three fixed price choices and a simple Stripe checkout flow.
 
 ## Tech
 - Next.js 16
@@ -45,15 +45,14 @@ Open `http://localhost:3000`.
 - `AI_CONTEXT.md`: stable AI/session context
 
 ## Current Product Behavior
-- Home page exposes multiple catalog slices (flash, trending, under price, for-you, paginated list).
-- Product page includes:
-  - gallery
-  - purchase panel
-  - shipping and pricing info
-  - JSON-LD metadata
-- Search page provides text search, filters, and sorting.
-- Cart is persisted in localStorage (`dealflow_cart`).
-- "Till kassan" i varukorgen startar Stripe-checkout direkt (utan mellanliggande formulär) och returnerar till:
+- Home page shows a full-screen hero video with three direct-checkout prices:
+  - `2599 kr`
+  - `2899 kr`
+  - `3499 kr`
+- Clicking a price sends the visitor to `/checkout`, which immediately starts Stripe checkout.
+- Search and catalog-driven entry flows are hidden from the public landing experience.
+- Cart is still persisted in localStorage (`dealflow_cart`) for legacy/fallback flows.
+- Stripe checkout returns to:
   - `/checkout/success` after completed payment
   - `/checkout/cancel` if payment is cancelled
 

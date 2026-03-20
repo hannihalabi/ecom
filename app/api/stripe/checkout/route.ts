@@ -7,6 +7,7 @@ import {
   SPECIAL_ORDER_VARIANT,
 } from "@/lib/specialOrder";
 import { SHIPPING_COST_PER_PRODUCT } from "@/lib/shipping";
+import { getWebsiteOfferById } from "@/lib/websiteOffers";
 import type { CartItem } from "@/types";
 
 const STRIPE_CHECKOUT_URL = "https://api.stripe.com/v1/checkout/sessions";
@@ -26,6 +27,7 @@ type CheckoutRequestBody = {
   items?: CartItem[];
   customer?: CheckoutCustomer;
   promotionCode?: string;
+  websiteOfferId?: string;
 };
 
 const safeText = (value: unknown) => (typeof value === "string" ? value.trim() : "");
@@ -55,35 +57,67 @@ export async function POST(request: Request) {
   }
 
   const items = Array.isArray(body.items) ? body.items.slice(0, MAX_LINES) : [];
-  if (items.length === 0) {
+  const websiteOffer = getWebsiteOfferById(safeText(body.websiteOfferId));
+
+  if (items.length === 0 && !websiteOffer) {
     return NextResponse.json({ error: "Varukorgen är tom." }, { status: 400 });
   }
 
-  const lineItems = items
-    .map((item) => {
-      const quantity = Number.isFinite(item.quantity) ? Math.floor(item.quantity) : 0;
-      if (quantity <= 0) return null;
-
-      if (isSpecialOrderProductId(item.productId)) {
-        return {
-          product: SPECIAL_ORDER_PRODUCT,
+  const lineItems = websiteOffer
+    ? [
+        {
+          product: {
+            id: websiteOffer.id,
+            slug: websiteOffer.id,
+            title: websiteOffer.title,
+            description: {
+              short: websiteOffer.description,
+              long: websiteOffer.description,
+            },
+            images: [],
+            category: "Direktkassa",
+            tags: [],
+            priceOriginal: websiteOffer.price,
+            priceDiscounted: websiteOffer.price,
+            rating: 5,
+            reviewCount: 0,
+            stock: 1,
+            shipping: {
+              price: 0,
+              etaDaysMin: 0,
+              etaDaysMax: 0,
+            },
+          },
           quantity: 1,
-          selectedVariant: SPECIAL_ORDER_VARIANT,
-          specialRequest: safeText(item.specialRequest),
-        };
-      }
+          selectedVariant: "",
+          specialRequest: "",
+        },
+      ]
+    : items
+        .map((item) => {
+          const quantity = Number.isFinite(item.quantity) ? Math.floor(item.quantity) : 0;
+          if (quantity <= 0) return null;
 
-      const product = PRODUCT_MAP.get(item.productId);
-      if (!product) return null;
+          if (isSpecialOrderProductId(item.productId)) {
+            return {
+              product: SPECIAL_ORDER_PRODUCT,
+              quantity: 1,
+              selectedVariant: SPECIAL_ORDER_VARIANT,
+              specialRequest: safeText(item.specialRequest),
+            };
+          }
 
-      return {
-        product,
-        quantity,
-        selectedVariant: safeText(item.selectedVariant),
-        specialRequest: "",
-      };
-    })
-    .filter((line): line is NonNullable<typeof line> => Boolean(line));
+          const product = PRODUCT_MAP.get(item.productId);
+          if (!product) return null;
+
+          return {
+            product,
+            quantity,
+            selectedVariant: safeText(item.selectedVariant),
+            specialRequest: "",
+          };
+        })
+        .filter((line): line is NonNullable<typeof line> => Boolean(line));
 
   if (lineItems.length === 0) {
     return NextResponse.json({ error: "Inga giltiga produkter i varukorgen." }, { status: 400 });
@@ -94,7 +128,7 @@ export async function POST(request: Request) {
   const customerName = [safeText(customer.firstName), safeText(customer.lastName)]
     .filter(Boolean)
     .join(" ");
-  const rawPromotionCode = safeText(body.promotionCode);
+  const rawPromotionCode = websiteOffer ? "" : safeText(body.promotionCode);
   const promotionValidation = rawPromotionCode
     ? validatePromotionCode(rawPromotionCode)
     : {
@@ -189,20 +223,22 @@ export async function POST(request: Request) {
     },
   );
 
-  params.set(`line_items[${lineItems.length}][quantity]`, String(totalItems));
-  params.set(`line_items[${lineItems.length}][price_data][currency]`, "sek");
-  params.set(
-    `line_items[${lineItems.length}][price_data][unit_amount]`,
-    String(Math.round(SHIPPING_COST_PER_PRODUCT * 100)),
-  );
-  params.set(
-    `line_items[${lineItems.length}][price_data][product_data][name]`,
-    "Frakt per produkt",
-  );
-  params.set(
-    `line_items[${lineItems.length}][price_data][product_data][description]`,
-    `${SHIPPING_COST_PER_PRODUCT} kr x antal produkter`,
-  );
+  if (!websiteOffer) {
+    params.set(`line_items[${lineItems.length}][quantity]`, String(totalItems));
+    params.set(`line_items[${lineItems.length}][price_data][currency]`, "sek");
+    params.set(
+      `line_items[${lineItems.length}][price_data][unit_amount]`,
+      String(Math.round(SHIPPING_COST_PER_PRODUCT * 100)),
+    );
+    params.set(
+      `line_items[${lineItems.length}][price_data][product_data][name]`,
+      "Frakt per produkt",
+    );
+    params.set(
+      `line_items[${lineItems.length}][price_data][product_data][description]`,
+      `${SHIPPING_COST_PER_PRODUCT} kr x antal produkter`,
+    );
+  }
 
   try {
     const stripeResponse = await fetch(STRIPE_CHECKOUT_URL, {

@@ -4,28 +4,52 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { createStripeCheckoutSession } from "@/lib/stripeCheckout";
+import { getWebsiteOfferById, type WebsiteOfferId } from "@/lib/websiteOffers";
 import { useCart } from "@/store/cart";
 
-export const CheckoutRedirectClient = () => {
+type CheckoutRedirectClientProps = {
+  websiteOfferId?: WebsiteOfferId;
+};
+
+export const CheckoutRedirectClient = ({
+  websiteOfferId,
+}: CheckoutRedirectClientProps) => {
   const { detailedItems, promotionCode } = useCart();
   const [error, setError] = useState<string | null>(null);
   const didAttempt = useRef(false);
+  const websiteOffer = getWebsiteOfferById(websiteOfferId);
+  const hasDirectOfferCheckout = Boolean(websiteOffer);
+  const hasCartCheckout = detailedItems.length > 0;
 
   useEffect(() => {
-    if (didAttempt.current || detailedItems.length === 0) return;
+    if (didAttempt.current || (!hasDirectOfferCheckout && !hasCartCheckout)) {
+      return;
+    }
+
     didAttempt.current = true;
 
     const start = async () => {
       setError(null);
 
-      track("begin_checkout", {
-        items: detailedItems.map(({ item }) => item),
-      });
+      if (hasDirectOfferCheckout && websiteOffer) {
+        track("begin_checkout", {
+          offerId: websiteOffer.id,
+          price: websiteOffer.price,
+        });
+      } else {
+        track("begin_checkout", {
+          items: detailedItems.map(({ item }) => item),
+        });
+      }
 
       try {
         const url = await createStripeCheckoutSession({
-          items: detailedItems.map(({ item }) => item),
-          promotionCode: promotionCode ?? undefined,
+          items: hasDirectOfferCheckout
+            ? undefined
+            : detailedItems.map(({ item }) => item),
+          promotionCode:
+            hasDirectOfferCheckout ? undefined : promotionCode ?? undefined,
+          websiteOfferId: websiteOffer?.id,
         });
         window.location.assign(url);
       } catch (checkoutError) {
@@ -38,9 +62,15 @@ export const CheckoutRedirectClient = () => {
     };
 
     void start();
-  }, [detailedItems, promotionCode]);
+  }, [
+    detailedItems,
+    hasCartCheckout,
+    hasDirectOfferCheckout,
+    promotionCode,
+    websiteOffer,
+  ]);
 
-  if (detailedItems.length === 0) {
+  if (!hasDirectOfferCheckout && detailedItems.length === 0) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white/90 p-6 text-center">
         <h1 className="text-xl font-semibold text-slate-900">Varukorgen är tom</h1>
@@ -70,10 +100,10 @@ export const CheckoutRedirectClient = () => {
       )}
       <div className="mt-5 flex items-center justify-center gap-3">
         <Link
-          href="/cart"
+          href="/"
           className="inline-flex rounded-full border border-slate-900 px-5 py-3 text-sm font-semibold text-slate-900"
         >
-          Tillbaka till varukorg
+          Tillbaka
         </Link>
       </div>
     </div>

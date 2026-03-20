@@ -1,4 +1,5 @@
 import type { CartItem } from "@/types";
+import type { WebsiteOfferId } from "@/lib/websiteOffers";
 
 type CheckoutCustomer = {
   firstName?: string;
@@ -10,9 +11,10 @@ type CheckoutCustomer = {
 };
 
 type CheckoutPayload = {
-  items: CartItem[];
+  items?: CartItem[];
   customer?: CheckoutCustomer;
   promotionCode?: string;
+  websiteOfferId?: WebsiteOfferId;
 };
 
 type CheckoutResponse = {

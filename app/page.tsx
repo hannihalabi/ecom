@@ -1,9 +1,5 @@
-import { BagRequestMatcher } from "@/components/home/BagRequestMatcher";
+import { PriceHero } from "@/components/home/PriceHero";
 
 export default function Home() {
-  return (
-    <div className="pb-2">
-      <BagRequestMatcher />
-    </div>
-  );
+  return <PriceHero />;
 }

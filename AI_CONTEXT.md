@@ -1,6 +1,6 @@
 # AI_CONTEXT
 
-Senast uppdaterad: 2026-03-13
+Senast uppdaterad: 2026-03-20
 
 ## Syfte
 Denna fil lagrar stabil projektkontext sa att nya Codex-sessioner snabbt kan leverera jamn kvalitet.
@@ -9,8 +9,8 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 ## Produktsnapshot
 - Produktnamn: SparkDeal
 - Typ: Mobilanpassad e-handelsapp (demo/prototyp)
-- Primart flode: Hem/Search -> Produktsida eller Special order -> Varukorg -> Kassa -> Bestallningar/Konto
-- Startsidan och `/search` visar en hero-baserad modellsokning i stallet for publika produktgridar
+- Primart flode: Hem -> Prisval -> Kassa -> Stripe
+- Startsidan visar en hero-video med tre fasta prisnivaer i stallet for sokning, produktgridar och katalogfloden
 - Sprak och lokal: Svenska copy-texter, valuta i SEK (`sv-SE`)
 
 ## Tech Stack
@@ -23,31 +23,26 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 
 ## Viktiga mappar
 - `app/`: Rutter och sida-komposition
-- `components/`: UI-komponenter per doman (`cart`, `checkout`, `product`, `search`, `layout`)
+- `components/`: UI-komponenter per doman (`cart`, `checkout`, `home`, `product`, `search`, `layout`)
 - `data/products.ts`: Statisk produktkatalog
 - `store/cart.tsx`: Global varukorgsstate och localStorage-hydrering
-- `lib/`: Hjalfunktioner (`products`, `format`, `analytics`, `shipping`, `promotions`)
+- `lib/`: Hjalfunktioner (`products`, `format`, `analytics`, `shipping`, `promotions`, `websiteOffers`)
 - `lib/bagMatch.ts`: logik for onskemalsanalys (steg + resultatcopy)
 - `types/index.ts`: Centrala typer (`Product`, `CartItem`, `Shipping`)
 - `docs/architecture.md`: Levande arkitekturdokumentation
 - `AGENTS.md`: Repo-specifik sessionsrutin
 
 ## Arkitektur och dataflode
-1. Produktdata laddas statiskt fran `data/products.ts`.
-2. Produktlistor/urval byggs via `lib/products.ts` (kategorier, sokning, relaterat, etc), men visas inte langre som oppna gridar pa hem/sok.
-3. Startsidans modellsokning sker i `components/home/BagRequestMatcher.tsx` med katalogtraffar fran `lib/products.ts`.
-4. Om ingen lagerford modell matchar skapas en `Special order` via `lib/specialOrder.ts` och `store/cart.tsx`.
-5. UI renderar i App Router-sidor under `app/`.
-6. Varukorgen hanteras klientside i `store/cart.tsx` och persisteras i localStorage med nyckeln `dealflow_cart` (rader + aktiv rabattkod).
-7. Checkout initieras direkt fran varukorgens CTA i `components/cart/CartPage.tsx` och via fallback i `components/checkout/CheckoutRedirectClient.tsx`, som skickar varukorgens rader (+ ev. rabattkod och special-order-text) till `app/api/stripe/checkout/route.ts`.
-8. Analytik ar idag en placeholder (`console.info`) i `lib/analytics.ts`.
+1. Startsidan renderar hero-komponenten `components/home/PriceHero.tsx` med video och tre fasta prisval.
+2. Ett klick pa en prisniva skickar besokaren till `/checkout?offer=...`.
+3. `components/checkout/CheckoutRedirectClient.tsx` startar Stripe Checkout for vald prisniva direkt mot `app/api/stripe/checkout/route.ts`.
+4. `lib/websiteOffers.ts` ar sanningskallan for de tre prisnivaerna `2599`, `2899`, `3499`.
+5. Varukorg, katalog, produktsidor och special-order-flode finns kvar i repot men ar inte del av det aktiva publika huvudflodet.
+6. Analytik ar idag en placeholder (`console.info`) i `lib/analytics.ts`.
 
 ## Routekarta (huvud)
-- `/` hem: hero/video med interaktiv modellsokning och special-order-CTA
-- `/p/[slug]`: produktsida med metadata, JSON-LD, galleri, kop-panel, relaterade produkter
-- `/search`: samma modellsokning som pa hem, for direktlankning med query
-- `/cart`: varukorg
-- `/checkout`: kassa med redirect till Stripe Checkout
+- `/` hem: hero/video med tre fasta prisnivaer
+- `/checkout`: kassa med redirect till Stripe Checkout for vald prisniva eller ev. fallback-floden
 - `/checkout/success`: bekräftelsesida efter lyckad Stripe-betalning
 - `/checkout/cancel`: avbruten betalning
 - `/orders`: hardkodad demo-lista
@@ -58,6 +53,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `Product.images` maste vara giltiga filer under `public/products/...`.
 - Priser representeras som numeriska kronor (inte oren stranglogik).
 - Katalogens visade saljpriser normaliseras till tre prisnivaer: `2999`, `3499`, `3999`.
+- Webbens publika hero-flode far endast exponera tre fasta prisval: `2599`, `2899`, `3499`.
 - `formatMoney` ska fortsatt anvanda `sv-SE` + `SEK` for konsekvent visning.
 - Frakt ar fast `129 kr` per produkt (`lib/shipping.ts`) och inkluderas i varukorg/checkout.
 - Varukorgsrad identifieras av (`productId` + `selectedVariant`).
@@ -75,7 +71,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 
 ## Kanda begransningar / risker
 - `orders` och `account` ar statiska mock-sidor.
-- Katalogsokningen ar klientsidebaserad mot statisk produktdata och speglar inte ett riktigt lagersystem.
+- Katalog-, varukorgs- och produktfloden finns kvar i kodbasen men ar nedtonade i den publika upplevelsen och kan drifta om de inte underhalls.
 - Checkout beror pa giltig Stripe-konfiguration i miljo/hosting.
 - Kampanjer i `lib/promotions.ts` ar tidsstyrda och maste hallas uppdaterade for att fortsatt ge rabatt.
 - Dokumentation kan drifta om `README.md`, `AI_CONTEXT.md` och `docs/architecture.md` inte uppdateras tillsammans.
