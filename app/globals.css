@@ -4,6 +4,8 @@
   color-scheme: light;
   --font-body: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif;
   --font-display: "Didot", "Bodoni MT", "Times New Roman", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
   --lux-bg: #efe5d7;
   --lux-paper: #f7efe2;
   --lux-paper-soft: #f2e4d1;

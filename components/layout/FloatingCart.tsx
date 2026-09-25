@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/store/cart";
 
 const CartIcon = () => (
@@ -21,7 +22,12 @@ const CartIcon = () => (
 );
 
 export const FloatingCart = () => {
+  const pathname = usePathname();
   const { totalItems } = useCart();
+
+  if (pathname.startsWith("/cart") || pathname.startsWith("/checkout")) {
+    return null;
+  }
 
   return (
     <Link

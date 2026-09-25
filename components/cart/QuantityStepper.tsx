@@ -7,22 +7,22 @@ type QuantityStepperProps = {
 
 export const QuantityStepper = ({ item, onChange }: QuantityStepperProps) => {
   return (
-    <div className="flex items-center rounded-full border border-slate-200">
+    <div className="inline-flex h-10 items-center rounded-full border border-[#d8d8d4] bg-[#f7f7f5] p-1">
       <button
         type="button"
         onClick={() => onChange(Math.max(item.quantity - 1, 0))}
-        className="px-3 py-1 text-sm"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#4b4b47] transition hover:bg-white hover:text-black"
         aria-label="Minska antal"
       >
-        -
+        −
       </button>
-      <span className="min-w-[24px] text-center text-sm font-semibold">
+      <span className="min-w-8 text-center text-sm font-semibold tabular-nums text-[#181816]">
         {item.quantity}
       </span>
       <button
         type="button"
         onClick={() => onChange(item.quantity + 1)}
-        className="px-3 py-1 text-sm"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#4b4b47] transition hover:bg-white hover:text-black"
         aria-label="Öka antal"
       >
         +

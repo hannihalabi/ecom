@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { QuantityStepper } from "@/components/cart/QuantityStepper";
 import { formatMoney } from "@/lib/format";
 import { isSpecialOrderProductId } from "@/lib/specialOrder";
-import { QuantityStepper } from "@/components/cart/QuantityStepper";
 import type { CartItem, Product } from "@/types";
 
 type CartItemRowProps = {
@@ -23,86 +23,107 @@ export const CartItemRow = ({
   onRemove,
 }: CartItemRowProps) => {
   const isSpecialOrder = isSpecialOrderProductId(item.productId);
+  const lineSavings =
+    (product.priceOriginal - product.priceDiscounted) * item.quantity;
+
+  const productImage = (
+    <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-[#f1f1ee]">
+      <Image
+        src={product.images[0]}
+        alt={product.title}
+        fill
+        className="object-cover transition duration-300 hover:scale-[1.025]"
+        sizes="(max-width: 640px) 104px, 136px"
+      />
+    </div>
+  );
 
   return (
-    <div className="flex gap-3 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-sm">
+    <article className="grid grid-cols-[6.5rem_1fr] gap-4 rounded-[1.5rem] border border-[#e3e3df] bg-white p-4 shadow-[0_12px_35px_rgba(15,15,13,0.045)] sm:grid-cols-[8.5rem_1fr] sm:gap-6 sm:p-5">
       {isSpecialOrder ? (
-        <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl">
-          <Image
-            src={product.images[0]}
-            alt={product.title}
-            fill
-            className="object-cover"
-            sizes="96px"
-          />
-        </div>
+        productImage
       ) : (
-        <Link href={`/p/${product.slug}`} className="relative h-24 w-24 flex-shrink-0">
-          <Image
-            src={product.images[0]}
-            alt={product.title}
-            fill
-            className="rounded-xl object-cover"
-            sizes="96px"
-          />
+        <Link href={`/p/${product.slug}`} aria-label={`Visa ${product.title}`}>
+          {productImage}
         </Link>
       )}
-      <div className="flex flex-1 flex-col gap-2">
-        <div>
-          {isSpecialOrder ? (
-            <p className="text-sm font-semibold">{product.title}</p>
-          ) : (
-            <Link href={`/p/${product.slug}`} className="text-sm font-semibold">
-              {product.title}
-            </Link>
-          )}
-          {!isSpecialOrder && item.selectedVariant && (
-            <p className="text-xs text-slate-500">{item.selectedVariant}</p>
-          )}
+
+      <div className="flex min-w-0 flex-col">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#85857e]">
+              {product.category}
+            </p>
+            {isSpecialOrder ? (
+              <p className="text-sm font-semibold leading-snug text-[#171715] sm:text-base">
+                {product.title}
+              </p>
+            ) : (
+              <Link
+                href={`/p/${product.slug}`}
+                className="line-clamp-2 text-sm font-semibold leading-snug text-[#171715] hover:underline hover:underline-offset-4 sm:text-base"
+              >
+                {product.title}
+              </Link>
+            )}
+            {!isSpecialOrder && item.selectedVariant && (
+              <p className="mt-1 text-xs text-[#74746e]">{item.selectedVariant}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="shrink-0 text-xs font-medium text-[#777771] underline decoration-[#c7c7c1] underline-offset-4 transition hover:text-black"
+          >
+            Ta bort
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-semibold text-slate-900">
-            {formatMoney(product.priceDiscounted)}
-          </span>
-          <span className="text-xs text-slate-400 line-through">
-            {formatMoney(product.priceOriginal)}
-          </span>
-          <span className="text-xs text-emerald-600">
-            Du sparar {formatMoney(product.priceOriginal - product.priceDiscounted)}
+
+        <div className="mt-3">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="text-sm font-semibold tabular-nums text-[#171715] sm:text-base">
+              {formatMoney(product.priceDiscounted)}
+            </span>
+            <span className="text-xs tabular-nums text-[#9b9b95] line-through">
+              {formatMoney(product.priceOriginal)}
+            </span>
+          </div>
+          <span className="mt-2 inline-flex whitespace-nowrap rounded-full bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold text-[#2f6942]">
+            Spara {formatMoney(lineSavings)}
           </span>
         </div>
+
         {isSpecialOrder && (
-          <label className="text-xs font-semibold text-slate-600">
+          <label className="mt-3 text-xs font-semibold text-[#5f5f59]">
             Önskad modell
             <textarea
               rows={3}
               value={item.specialRequest ?? ""}
               onChange={(event) => onUpdateRequest?.(event.target.value)}
               placeholder="Beskriv modellen du vill att vi ska ta fram"
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-700 outline-none focus:border-slate-300"
+              className="mt-2 w-full rounded-2xl border border-[#d8d8d4] bg-[#f8f8f6] px-3 py-2 text-sm font-normal text-[#343430] outline-none focus:border-[#171715]"
             />
           </label>
         )}
-        <div className="flex flex-wrap items-center justify-between gap-2">
+
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-[#edede9] pt-4">
           {isSpecialOrder ? (
-            <div className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
-              Designbrief x {item.quantity}
+            <div className="rounded-full border border-[#d8d8d4] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#686862]">
+              Designbrief × {item.quantity}
             </div>
           ) : (
             <QuantityStepper item={item} onChange={onUpdate} />
           )}
-          <div className="text-sm font-semibold text-slate-900">
-            {formatMoney(lineTotal)}
+          <div className="text-right">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-[#8b8b84]">
+              Summa
+            </p>
+            <p className="mt-0.5 text-sm font-semibold tabular-nums text-[#171715] sm:text-base">
+              {formatMoney(lineTotal)}
+            </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="text-left text-xs font-semibold text-rose-600"
-        >
-          Ta bort
-        </button>
       </div>
-    </div>
+    </article>
   );
 };
