@@ -6,7 +6,7 @@ export const metadata = {
 
 export default function Cart() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex min-h-[calc(100svh-4rem)] max-w-6xl flex-col gap-6 px-4 py-10 md:px-6">
       <h1 className="text-2xl font-semibold text-slate-900">Din varukorg</h1>
       <CartPage />
     </div>

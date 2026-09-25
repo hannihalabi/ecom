@@ -9,6 +9,11 @@ const normalizeSearchValue = (value: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
+const isLouisVuittonQuery = (normalizedQuery: string) => {
+  const terms = normalizedQuery.split(" ").filter(Boolean);
+  return terms.includes("lv") || normalizedQuery.includes("louis vuitton");
+};
+
 export const getAllProducts = () => products;
 
 export const getProductBySlug = (slug: string) =>
@@ -51,13 +56,18 @@ export const getPaginated = (page: number, perPage: number) => {
   return { items, totalPages };
 };
 
-export const searchCatalogProducts = (query: string, limit = 6) => {
+export const searchProductList = (
+  productList: Product[],
+  query: string,
+  limit = Number.POSITIVE_INFINITY,
+) => {
   const normalizedQuery = normalizeSearchValue(query);
   if (!normalizedQuery) return [];
 
   const queryTerms = normalizedQuery.split(" ").filter(Boolean);
+  const matchesLouisVuittonAlias = isLouisVuittonQuery(normalizedQuery);
 
-  return [...products]
+  return [...productList]
     .map((product) => {
       const title = normalizeSearchValue(product.title);
       const tags = product.tags.map(normalizeSearchValue);
@@ -67,6 +77,7 @@ export const searchCatalogProducts = (query: string, limit = 6) => {
 
       if (title.includes(normalizedQuery)) score += 12;
       if (category.includes(normalizedQuery)) score += 5;
+      if (matchesLouisVuittonAlias && category === "louis vuitton") score += 16;
 
       score += queryTerms.reduce((sum, term) => {
         let termScore = 0;
@@ -86,3 +97,6 @@ export const searchCatalogProducts = (query: string, limit = 6) => {
     .slice(0, limit)
     .map(({ product }) => product);
 };
+
+export const searchCatalogProducts = (query: string, limit = 6) =>
+  searchProductList(products, query, limit);

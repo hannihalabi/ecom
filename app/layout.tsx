@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { CartProvider } from "@/store/cart";
 
 const DEFAULT_SITE_URL = "http://localhost:3000";
@@ -16,12 +17,12 @@ function resolveMetadataBase(): URL {
 
 export const metadata: Metadata = {
   title: {
-    default: "SparkDeal | Handgjorda vaskor",
-    template: "%s | SparkDeal",
+    default: "bags",
+    template: "%s | bags",
   },
   metadataBase: resolveMetadataBase(),
   description:
-    "Handgjord vaska likt originalet i topp klass.",
+    "Sök bland aktuella väskmodeller och betala säkert med Stripe.",
 };
 
 export default function RootLayout({
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="sv">
       <body className="min-h-screen bg-[var(--lux-bg)] text-[var(--lux-ink)] antialiased">
         <CartProvider>
+          <SiteHeader />
           <main>{children}</main>
         </CartProvider>
       </body>

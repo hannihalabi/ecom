@@ -1,5 +1,6 @@
-import { PriceHero } from "@/components/home/PriceHero";
+import { HeroSearch } from "@/components/home/HeroSearch";
+import { products } from "@/data/products";
 
 export default function Home() {
-  return <PriceHero />;
+  return <HeroSearch products={products} />;
 }

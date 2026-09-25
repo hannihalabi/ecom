@@ -158,7 +158,7 @@ export const BagRequestMatcher = ({
                     Goda nyheter! Vi kan special designa väskan åt dig.
                   </h3>
                   <p className="mt-2 text-sm text-[var(--lux-muted)]">
-                    Vi hittar ingen lagerförd träff på "{normalizedQuery}", men du kan
+                    Vi hittar ingen lagerförd träff på &ldquo;{normalizedQuery}&rdquo;, men du kan
                     gå vidare med en special order direkt nu.
                   </p>
                   <div className="mt-4 flex flex-wrap items-center gap-3">

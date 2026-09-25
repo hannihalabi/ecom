@@ -71,7 +71,7 @@ export default async function ProductPage({
   };
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-10 md:px-6">
       <TrackView productId={product.id} />
       <script
         type="application/ld+json"
