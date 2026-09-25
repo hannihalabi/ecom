@@ -6,7 +6,7 @@ export const metadata = {
 
 export default function CheckoutCancelPage() {
   return (
-    <div className="mx-auto min-h-[calc(100svh-4rem)] max-w-3xl px-4 py-10 md:px-6">
+    <div className="mx-auto min-h-screen max-w-3xl px-4 py-10 md:px-6">
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center">
         <h1 className="text-2xl font-semibold text-amber-700">Betalningen avbröts</h1>
         <p className="mt-2 text-sm text-amber-700">

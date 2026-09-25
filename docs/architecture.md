@@ -45,7 +45,7 @@ There is no backend order service yet.
   - analytics tracking hooks
 
 ## Data Flow
-1. `components/layout/SiteHeader.tsx` renders the global `bags` identity and cart status.
+1. `components/layout/FloatingCart.tsx` renders cart status as a global lower-right action; there is no global header or visible company identity.
 2. `components/home/HeroSearch.tsx` renders `LV1.mp4` with the search field as the only central hero control.
 3. `lib/products.ts` ranks matches and expands `LV` to the `Louis Vuitton` category.
 4. Search results link to product details and can add catalog products to the persisted cart.

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { SiteHeader } from "@/components/layout/SiteHeader";
+import { FloatingCart } from "@/components/layout/FloatingCart";
 import { CartProvider } from "@/store/cart";
 
 const DEFAULT_SITE_URL = "http://localhost:3000";
@@ -34,8 +34,8 @@ export default function RootLayout({
     <html lang="sv">
       <body className="min-h-screen bg-[var(--lux-bg)] text-[var(--lux-ink)] antialiased">
         <CartProvider>
-          <SiteHeader />
           <main>{children}</main>
+          <FloatingCart />
         </CartProvider>
       </body>
     </html>

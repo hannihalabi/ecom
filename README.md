@@ -45,7 +45,8 @@ Open `http://localhost:3000`.
 - `AI_CONTEXT.md`: stable AI/session context
 
 ## Current Product Behavior
-- The `bags` header remains available across the storefront and links to the cart.
+- The storefront has no header or visible company name.
+- A floating cart button remains available in the lower-right corner.
 - Home uses `public/mp4/LV1.mp4` as a full-screen hero background.
 - The only hero control is the product search.
 - Search results update while typing and support the `LV`/`Louis Vuitton` alias.

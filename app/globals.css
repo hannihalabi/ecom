@@ -92,6 +92,42 @@
   }
 }
 
+@keyframes product-to-cart {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  48% {
+    opacity: 1;
+    transform: translate3d(
+        var(--flight-mid-x),
+        var(--flight-mid-y),
+        0
+      )
+      scale(0.78) rotate(-7deg);
+  }
+  82% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0.16;
+    transform: translate3d(var(--flight-x), var(--flight-y), 0) scale(0.16)
+      rotate(8deg);
+  }
+}
+
+@keyframes cart-attention-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.28);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 11px rgba(255, 255, 255, 0);
+  }
+}
+
 @layer utilities {
   .lux-panel {
     border: 1px solid rgba(163, 124, 75, 0.4);
@@ -131,6 +167,16 @@
     animation: fade 0.5s ease-out both;
   }
 
+  .product-to-cart {
+    animation: product-to-cart 720ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    will-change: transform, opacity;
+  }
+
+  .cart-attention-pulse {
+    animation: cart-attention-pulse 1.8s ease-in-out infinite;
+    will-change: transform, box-shadow;
+  }
+
   .stagger-1 {
     animation-delay: 80ms;
   }
@@ -141,5 +187,12 @@
 
   .stagger-3 {
     animation-delay: 240ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-attention-pulse {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22);
   }
 }

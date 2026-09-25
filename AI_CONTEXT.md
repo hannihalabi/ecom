@@ -33,7 +33,7 @@ Om denna fil krockar med aktuell kod i repot ar koden sanningskallan.
 - `AGENTS.md`: Repo-specifik sessionsrutin
 
 ## Arkitektur och dataflode
-1. `components/layout/SiteHeader.tsx` visar varumarket `bags` och aktuell varukorg pa alla publika sidor.
+1. `components/layout/FloatingCart.tsx` visar en global flytande varukorgsknapp i nedre hogra hornet; sidan har ingen header eller synligt foretagsnamn.
 2. Startsidan renderar `components/home/HeroSearch.tsx` ovanpa `public/mp4/LV1.mp4`.
 3. Sokningen filtrerar den statiska katalogen direkt i klienten via `searchProductList` i `lib/products.ts`.
 4. Aliasregeln gor att `LV` och `Louis Vuitton` visar samtliga aktuella Louis Vuitton-produkter.
