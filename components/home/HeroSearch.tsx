@@ -61,6 +61,7 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
   const [flyingProduct, setFlyingProduct] = useState<FlyingProduct | null>(null);
   const [cartAnnouncement, setCartAnnouncement] = useState("");
   const [activeTop, setActiveTop] = useState<number | null>(null);
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const searchRegionRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const deferredQuery = useDeferredValue(query);
@@ -84,8 +85,9 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
       const parent = searchRegionRef.current?.offsetParent;
       if (!parent) return;
 
-      const margin = window.innerWidth >= 640 ? 24 : 12;
+      const margin = window.innerWidth >= 640 ? 24 : 8;
       const viewportTop = viewport?.offsetTop ?? 0;
+      setViewportHeight(viewport?.height ?? window.innerHeight);
       setActiveTop(
         Math.max(margin, viewportTop + margin - parent.getBoundingClientRect().top),
       );
@@ -218,7 +220,7 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
           className={[
             "absolute left-4 right-4 mx-auto w-auto max-w-3xl transition-[top,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:left-6 sm:right-6",
             isSearchActive
-              ? "top-3 translate-y-0 sm:top-6"
+              ? "top-2 translate-y-0 sm:top-6"
               : "top-1/2 -translate-y-1/2",
           ].join(" ")}
         >
@@ -263,15 +265,12 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
 
           {showResults && (
             <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] overflow-hidden rounded-[1.5rem] border border-white/20 bg-[#f7f7f5]/98 shadow-[0_32px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-              <div className="flex items-center justify-between border-b border-black/10 px-5 py-3.5">
+              <div className="flex items-center justify-between border-b border-black/10 px-4 py-2.5">
                 <p className="text-sm font-medium text-black/65" aria-live="polite">
                   {isSearching
                     ? "Söker…"
                     : `${results.length} ${results.length === 1 ? "modell" : "modeller"}`}
                 </p>
-                {results.length > 0 && (
-                  <p className="text-xs text-black/45">Aktuellt sortiment</p>
-                )}
               </div>
 
               {!isSearching && results.length === 0 ? (
@@ -282,64 +281,58 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
                   </p>
                 </div>
               ) : (
-                <div className="grid max-h-[calc(100dvh-10rem)] grid-cols-1 gap-px overflow-y-auto overscroll-contain bg-black/10 sm:grid-cols-2">
+                <ul
+                  className="divide-y divide-black/10 overflow-y-auto overscroll-contain"
+                  style={{
+                    // 100dvh ignores the on-screen keyboard; size to the visual viewport instead.
+                    maxHeight: viewportHeight
+                      ? Math.max(120, viewportHeight - 8 - 72 - 12 - 44 - 12)
+                      : "calc(100dvh - 10rem)",
+                  }}
+                >
                   {results.map((product) => (
-                    <article
+                    <li
                       key={product.id}
-                      className="grid grid-cols-[5.5rem_1fr] gap-3 bg-[#f7f7f5] p-3 sm:grid-cols-[6rem_1fr]"
+                      className="flex items-center gap-3 px-3 py-2"
                     >
                       <Link
                         href={`/p/${product.slug}`}
                         data-cart-source
-                        className="relative aspect-square overflow-hidden rounded-xl bg-[#e9e7e2]"
+                        className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[#e9e7e2]"
                         aria-label={`Visa ${product.title}`}
                       >
                         <Image
                           src={product.images[0]}
                           alt={product.title}
                           fill
-                          sizes="96px"
-                          className="object-cover transition duration-300 hover:scale-[1.03]"
+                          sizes="48px"
+                          className="object-cover"
                         />
                       </Link>
-                      <div className="flex min-w-0 flex-col justify-between gap-2 py-0.5">
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-black/45">
-                            {product.category}
-                          </p>
-                          <Link
-                            href={`/p/${product.slug}`}
-                            className="mt-1 line-clamp-2 block text-sm font-semibold leading-snug text-black hover:underline hover:underline-offset-2"
-                          >
-                            {product.title}
-                          </Link>
-                          <p className="mt-1 text-sm font-medium text-black/75">
-                            {formatMoney(product.priceDiscounted)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Link
-                            href={`/p/${product.slug}`}
-                            className="rounded-full border border-black/15 px-3 py-1.5 text-[11px] font-semibold text-black transition hover:border-black/35"
-                          >
-                            Visa
-                          </Link>
-                          <button
-                            type="button"
-                            onPointerDown={(event) => event.preventDefault()}
-                            onClick={(event) => handleAdd(product, event)}
-                            disabled={Boolean(flyingProduct)}
-                            className="rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/75 disabled:cursor-wait disabled:opacity-55"
-                          >
-                            {flyingProduct?.productId === product.id
-                              ? "Lägger till…"
-                              : "Lägg till"}
-                          </button>
-                        </div>
-                      </div>
-                    </article>
+                      <Link
+                        href={`/p/${product.slug}`}
+                        className="min-w-0 flex-1"
+                      >
+                        <span className="block truncate text-sm font-semibold text-black">
+                          {product.title}
+                        </span>
+                        <span className="block text-sm text-black/65">
+                          {formatMoney(product.priceDiscounted)}
+                        </span>
+                      </Link>
+                      <button
+                        type="button"
+                        onPointerDown={(event) => event.preventDefault()}
+                        onClick={(event) => handleAdd(product, event)}
+                        disabled={Boolean(flyingProduct)}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black text-lg leading-none text-white transition hover:bg-black/75 disabled:cursor-wait disabled:opacity-55"
+                        aria-label={`Lägg till ${product.title} i varukorgen`}
+                      >
+                        +
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </div>
           )}
