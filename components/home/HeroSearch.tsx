@@ -75,35 +75,38 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
   const isSearching = query !== deferredQuery;
   const showResults = isSearchActive && query.trim().length > 0;
 
-  // iOS Safari scrolls the page when the keyboard opens, which would leave a
-  // section-anchored search bar above the visible area. Pin it to the visual viewport.
+  // While active the bar is fixed to the visual viewport, so it stays at the top
+  // of what is visible when iOS Safari scrolls the page for the keyboard.
   useEffect(() => {
     if (!isSearchActive) return;
 
     const viewport = window.visualViewport;
     const update = () => {
-      const parent = searchRegionRef.current?.offsetParent;
-      if (!parent) return;
-
       const margin = window.innerWidth >= 640 ? 24 : 8;
-      const viewportTop = viewport?.offsetTop ?? 0;
       setViewportHeight(viewport?.height ?? window.innerHeight);
-      setActiveTop(
-        Math.max(margin, viewportTop + margin - parent.getBoundingClientRect().top),
-      );
+      setActiveTop((viewport?.offsetTop ?? 0) + margin);
     };
 
-    update();
+    // Wait a frame so the move from the centered position animates.
+    const frame = requestAnimationFrame(update);
     viewport?.addEventListener("resize", update);
     viewport?.addEventListener("scroll", update);
-    window.addEventListener("scroll", update);
 
     return () => {
+      cancelAnimationFrame(frame);
       viewport?.removeEventListener("resize", update);
       viewport?.removeEventListener("scroll", update);
-      window.removeEventListener("scroll", update);
     };
   }, [isSearchActive]);
+
+  const activateSearch = () => {
+    if (isSearchActive) return;
+
+    const rect = searchRegionRef.current?.getBoundingClientRect();
+    // Start where the centered bar currently is (top-1/2 with -translate-y-1/2).
+    if (rect) setActiveTop(rect.top + rect.height / 2);
+    setIsSearchActive(true);
+  };
 
   const commitProductToCart = (productId: string, title: string) => {
     addItem(productId, 1);
@@ -214,14 +217,14 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
       >
         <div
           ref={searchRegionRef}
-          onFocusCapture={() => setIsSearchActive(true)}
+          onFocusCapture={activateSearch}
           onBlurCapture={handleSearchBlur}
           style={isSearchActive && activeTop !== null ? { top: activeTop } : undefined}
           className={[
-            "absolute left-4 right-4 mx-auto w-auto max-w-3xl transition-[top,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:left-6 sm:right-6",
+            "left-4 right-4 mx-auto w-auto max-w-3xl transition-[top,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:left-6 sm:right-6",
             isSearchActive
-              ? "top-2 translate-y-0 sm:top-6"
-              : "top-1/2 -translate-y-1/2",
+              ? "fixed translate-y-0"
+              : "absolute top-1/2 -translate-y-1/2",
           ].join(" ")}
         >
           <label htmlFor="product-search" className="sr-only">
