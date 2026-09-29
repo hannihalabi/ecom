@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   useDeferredValue,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -59,6 +60,7 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [flyingProduct, setFlyingProduct] = useState<FlyingProduct | null>(null);
   const [cartAnnouncement, setCartAnnouncement] = useState("");
+  const [activeTop, setActiveTop] = useState<number | null>(null);
   const searchRegionRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const deferredQuery = useDeferredValue(query);
@@ -71,6 +73,35 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
   );
   const isSearching = query !== deferredQuery;
   const showResults = isSearchActive && query.trim().length > 0;
+
+  // iOS Safari scrolls the page when the keyboard opens, which would leave a
+  // section-anchored search bar above the visible area. Pin it to the visual viewport.
+  useEffect(() => {
+    if (!isSearchActive) return;
+
+    const viewport = window.visualViewport;
+    const update = () => {
+      const parent = searchRegionRef.current?.offsetParent;
+      if (!parent) return;
+
+      const margin = window.innerWidth >= 640 ? 24 : 12;
+      const viewportTop = viewport?.offsetTop ?? 0;
+      setActiveTop(
+        Math.max(margin, viewportTop + margin - parent.getBoundingClientRect().top),
+      );
+    };
+
+    update();
+    viewport?.addEventListener("resize", update);
+    viewport?.addEventListener("scroll", update);
+    window.addEventListener("scroll", update);
+
+    return () => {
+      viewport?.removeEventListener("resize", update);
+      viewport?.removeEventListener("scroll", update);
+      window.removeEventListener("scroll", update);
+    };
+  }, [isSearchActive]);
 
   const commitProductToCart = (productId: string, title: string) => {
     addItem(productId, 1);
@@ -183,6 +214,7 @@ export const HeroSearch = ({ products }: HeroSearchProps) => {
           ref={searchRegionRef}
           onFocusCapture={() => setIsSearchActive(true)}
           onBlurCapture={handleSearchBlur}
+          style={isSearchActive && activeTop !== null ? { top: activeTop } : undefined}
           className={[
             "absolute left-4 right-4 mx-auto w-auto max-w-3xl transition-[top,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:left-6 sm:right-6",
             isSearchActive
